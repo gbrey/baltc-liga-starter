@@ -489,8 +489,230 @@ function goBack() {
   previousSection = null;
 }
 
+// Garcabot Floating Chatbot functionality
+let messageCount = 0;
+const maxMessages = 5;
+let isChatOpen = false;
+let hasShownWelcome = false;
+
+const garcabotResponses = [
+  "¿Querés que te diga eso? Depositá primero. Estoy terminando de armar el bot, en unos días estará listo.",
+  "Todo tiene un precio, papá. Mandame 10 lucas. Estoy terminando de armar el bot, en unos días estará listo.",
+  "Gratis no trabajo. Soy bot, no gil. Estoy terminando de armar el bot, en unos días estará listo.",
+  "Mirá, yo soy un bot serio. No regalo información así nomás. Estoy terminando de armar el bot, en unos días estará listo.",
+  "¿Vos te pensás que esto es gratis? Andá a laburar, che. Estoy terminando de armar el bot, en unos días estará listo.",
+  "Para esa info necesito que me deposites en mi cuenta de MercadoPago. Estoy terminando de armar el bot, en unos días estará listo.",
+  "Soy Garcabot, no el bot de la caridad. Plata primero. Estoy terminando de armar el bot, en unos días estará listo.",
+  "¿Sabés cuánto cuesta mantener un bot como yo? Plata, mucha plata. Estoy terminando de armar el bot, en unos días estará listo.",
+  "No, no y no. Sin plata no hay info. Así de simple. Estoy terminando de armar el bot, en unos días estará listo.",
+  "¿Te pensás que soy el bot de Google? Acá se paga todo, amigo. Estoy terminando de armar el bot, en unos días estará listo."
+];
+
+function addMessage(content, isUser = false) {
+  const messagesContainer = document.getElementById('chatMessages');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+  
+  const avatar = document.createElement('div');
+  avatar.className = 'message-avatar';
+  if (isUser) {
+    avatar.textContent = '👤';
+  } else {
+    const img = document.createElement('img');
+    img.src = './image.png';
+    img.alt = 'Garcabot';
+    img.style.width = '16px';
+    img.style.height = '16px';
+    img.style.filter = 'brightness(0) invert(1)';
+    avatar.appendChild(img);
+  }
+  
+  const messageContent = document.createElement('div');
+  messageContent.className = 'message-content';
+  messageContent.textContent = content;
+  
+  const messageTime = document.createElement('div');
+  messageTime.className = 'message-time';
+  messageTime.textContent = new Date().toLocaleTimeString('es-AR', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+  
+  messageContent.appendChild(messageTime);
+  messageDiv.appendChild(avatar);
+  messageDiv.appendChild(messageContent);
+  messagesContainer.appendChild(messageDiv);
+  
+  // Scroll to bottom
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function showTypingIndicator() {
+  const messagesContainer = document.getElementById('chatMessages');
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'message bot';
+  typingDiv.id = 'typing-indicator';
+  
+  const avatar = document.createElement('div');
+  avatar.className = 'message-avatar';
+  const img = document.createElement('img');
+  img.src = './image.png';
+  img.alt = 'Garcabot';
+  img.style.width = '16px';
+  img.style.height = '16px';
+  img.style.filter = 'brightness(0) invert(1)';
+  avatar.appendChild(img);
+  
+  const typingContent = document.createElement('div');
+  typingContent.className = 'message-content typing-indicator';
+  typingContent.innerHTML = `
+    Garcabot está escribiendo
+    <div class="typing-dots">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+  
+  typingDiv.appendChild(avatar);
+  typingDiv.appendChild(typingContent);
+  messagesContainer.appendChild(typingDiv);
+  
+  // Scroll to bottom
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const typingIndicator = document.getElementById('typing-indicator');
+  if (typingIndicator) {
+    typingIndicator.remove();
+  }
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  
+  if (!message) return;
+  
+  // Add user message
+  addMessage(message, true);
+  input.value = '';
+  
+  // Disable input and button
+  const sendButton = document.getElementById('sendButton');
+  sendButton.disabled = true;
+  input.disabled = true;
+  
+  // Show typing indicator
+  showTypingIndicator();
+  
+  // Simulate bot response delay
+  setTimeout(() => {
+    removeTypingIndicator();
+    
+    // Check if we've reached the message limit
+    if (messageCount >= maxMessages) {
+      addMessage("Ya te dije 5 veces que necesito plata. ¿No entendés? Andá a laburar y después hablamos. Estoy terminando de armar el bot, en unos días estará listo.");
+      sendButton.disabled = false;
+      input.disabled = false;
+      return;
+    }
+    
+    // Get random response
+    const randomResponse = garcabotResponses[Math.floor(Math.random() * garcabotResponses.length)];
+    addMessage(randomResponse);
+    
+    messageCount++;
+    
+    // Re-enable input and button
+    sendButton.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5 seconds
+}
+
+function handleSuggestionClick(event) {
+  const question = event.target.getAttribute('data-question');
+  if (question) {
+    document.getElementById('chatInput').value = question;
+    sendMessage();
+  }
+}
+
+function toggleChat() {
+  const chatWindow = document.getElementById('chatbot-window');
+  const badge = document.getElementById('chatbot-badge');
+  
+  if (isChatOpen) {
+    chatWindow.style.display = 'none';
+    isChatOpen = false;
+  } else {
+    chatWindow.style.display = 'flex';
+    isChatOpen = true;
+    
+    // Hide badge when chat is opened
+    badge.style.display = 'none';
+    
+    // Show welcome message if first time
+    if (!hasShownWelcome) {
+      setTimeout(() => {
+        addMessage("¡Hola! Soy Garcabot, tu asistente virtual de la liga BALTC. ¿En qué puedo ayudarte?");
+        hasShownWelcome = true;
+      }, 500);
+    }
+    
+    // Focus input
+    setTimeout(() => {
+      document.getElementById('chatInput').focus();
+    }, 100);
+  }
+}
+
+function closeChat() {
+  const chatWindow = document.getElementById('chatbot-window');
+  chatWindow.style.display = 'none';
+  isChatOpen = false;
+}
+
+// Initialize Garcabot
+function initGarcabot() {
+  const chatToggle = document.getElementById('chatbot-toggle');
+  const chatClose = document.getElementById('chatbot-close');
+  const chatInput = document.getElementById('chatInput');
+  const sendButton = document.getElementById('sendButton');
+  const suggestionButtons = document.querySelectorAll('.suggestion-btn');
+  
+  // Add event listeners
+  chatToggle.addEventListener('click', toggleChat);
+  chatClose.addEventListener('click', closeChat);
+  sendButton.addEventListener('click', sendMessage);
+  
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+  
+  // Add suggestion button listeners
+  suggestionButtons.forEach(button => {
+    button.addEventListener('click', handleSuggestionClick);
+  });
+  
+  // Show badge after 3 seconds to attract attention
+  setTimeout(() => {
+    if (!hasShownWelcome) {
+      document.getElementById('chatbot-badge').style.display = 'flex';
+    }
+  }, 3000);
+}
+
 // Make functions global
 window.showRoster = showRoster;
 window.goBack = goBack;
+window.initGarcabot = initGarcabot;
 
 loadStandings('A', document.querySelector('#tblA')); loadStandings('B', document.querySelector('#tblB')); loadMatches(document.querySelector('#tblM')); loadPlayers(document.querySelector('#playersGrid'));
+
+// Initialize Garcabot automatically
+initGarcabot();

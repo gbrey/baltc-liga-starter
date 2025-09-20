@@ -47,6 +47,44 @@
     <div id="playersGrid"></div>
   </div>
   
+  <!-- Garcabot Floating Chatbot -->
+  <div id="garcabot-widget" class="chatbot-widget">
+    <div id="chatbot-toggle" class="chatbot-toggle">
+      <img src="./image.png" alt="Garcabot" class="chatbot-icon">
+      <div class="chatbot-badge" id="chatbot-badge" style="display: none;">1</div>
+    </div>
+    
+    <div id="chatbot-window" class="chatbot-window" style="display: none;">
+      <div class="chatbot-header">
+        <div class="chatbot-header-info">
+          <div class="chatbot-avatar-small">
+            <img src="./image.png" alt="Garcabot" class="chatbot-avatar-img">
+          </div>
+          <div class="chatbot-title">
+            <h4>Garcabot</h4>
+            <span class="chatbot-status">En línea</span>
+          </div>
+        </div>
+        <button id="chatbot-close" class="chatbot-close">×</button>
+      </div>
+      
+      <div id="chatMessages" class="chatbot-messages"></div>
+      
+      <div class="chatbot-suggestions">
+        <div class="suggestion-buttons">
+          <button class="suggestion-btn" data-question="¿Quién está primero?">¿Quién está primero?</button>
+          <button class="suggestion-btn" data-question="¿Quién cagó más pelotas?">¿Quién cagó más pelotas?</button>
+          <button class="suggestion-btn" data-question="¿Cuántos partidos me faltan?">¿Cuántos partidos me faltan?</button>
+        </div>
+      </div>
+      
+      <div class="chatbot-input-container">
+        <input type="text" id="chatInput" placeholder="Escribe tu pregunta..." class="chatbot-input">
+        <button id="sendButton" class="chatbot-send">Enviar</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- Roster Section -->
   <div id="roster" class="card" style="display:none">
     <div class="roster-header">
