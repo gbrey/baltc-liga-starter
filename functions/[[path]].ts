@@ -26,14 +26,22 @@ async function resolvePlayer(db: D1Database, rawName: string) {
 
 // ---------- PUBLIC API
 app.get('/api/matches', async (c) => {
-  const { results } = await c.env.DB.prepare(
-    `SELECT m.id, w.name as winner, l.name as loser, m.score, m.date, m.created_at
-     FROM matches m
-     JOIN players w ON w.id=m.winner_id
-     JOIN players l ON l.id=m.loser_id
-     ORDER BY coalesce(m.date, datetime(m.created_at,'unixepoch')) DESC, m.id DESC`
-  ).all()
-  return c.json(results)
+  const playerId = c.req.query('player')
+  let query = `SELECT m.id, w.name as winner, l.name as loser, m.score, m.date, m.created_at
+               FROM matches m
+               JOIN players w ON w.id=m.winner_id
+               JOIN players l ON l.id=m.loser_id`
+  
+  if (playerId) {
+    query += ` WHERE m.winner_id=? OR m.loser_id=?`
+    query += ` ORDER BY coalesce(m.date, datetime(m.created_at,'unixepoch')) DESC, m.id DESC`
+    const { results } = await c.env.DB.prepare(query).bind(playerId, playerId).all()
+    return c.json(results)
+  } else {
+    query += ` ORDER BY coalesce(m.date, datetime(m.created_at,'unixepoch')) DESC, m.id DESC`
+    const { results } = await c.env.DB.prepare(query).all()
+    return c.json(results)
+  }
 })
 
 app.get('/api/standings', async (c) => {
@@ -57,6 +65,13 @@ app.get('/api/standings', async (c) => {
      FROM j
      ORDER BY pts DESC, pg DESC, name ASC`
   ).bind(system).all()
+  return c.json(results)
+})
+
+app.get('/api/players', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT DISTINCT p.id, p.name FROM players p ORDER BY p.name ASC`
+  ).all()
   return c.json(results)
 })
 

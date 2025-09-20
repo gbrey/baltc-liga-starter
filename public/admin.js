@@ -1,7 +1,13 @@
 const $=(s)=>document.querySelector(s);
 async function authFetch(url, opts={}){ return fetch(url, opts); }
+async function loadPlayers(){
+  const res=await authFetch('/api/players'); const data=await res.json(); const select=$('#playerFilter');
+  select.innerHTML='<option value="">Todos los jugadores</option>';
+  data.forEach(p=>{ const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; select.appendChild(opt); });
+}
 async function reloadMatches(){
-  const res=await authFetch('/api/matches'); const data=await res.json(); const container=$('#adminMatches');
+  const playerId=$('#playerFilter').value; const url=playerId?`/api/matches?player=${playerId}`:'/api/matches';
+  const res=await authFetch(url); const data=await res.json(); const container=$('#adminMatches');
   const tbl=document.createElement('table'); tbl.innerHTML='<thead><tr><th>ID</th><th>Fecha</th><th>Ganador</th><th>Perdedor</th><th>Score</th><th></th></tr></thead>';
   const tb=document.createElement('tbody');
   data.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.id}</td><td>${r.date ?? new Date(r.created_at*1000).toISOString().slice(0,10)}</td><td>${r.winner}</td><td>${r.loser}</td><td>${r.score}</td><td><button data-id="${r.id}" class="tab">Borrar</button></td>`; tb.appendChild(tr); });
@@ -23,4 +29,6 @@ document.querySelector('#btnImport').addEventListener('click', async ()=>{
   const txt=document.querySelector('#csvText').value; const res=await authFetch('/api/admin/import',{method:'POST', body:txt});
   document.querySelector('#impMsg').textContent=res.ok?'Importado ✅':'Error ❌'; if(res.ok) await reloadMatches();
 });
+document.querySelector('#playerFilter').addEventListener('change', reloadMatches);
+loadPlayers();
 reloadMatches();

@@ -10,7 +10,11 @@
 <label>Fecha (opcional)<br><input id="date" placeholder="YYYY-MM-DD"></label>
 </div><div style="margin-top:10px"><button class="tab">Guardar</button></div></form>
 <div id="saveMsg" class="small"></div></div>
-<div class="card"><h3>Partidos</h3><div id="adminMatches"></div></div>
+<div class="card"><h3>Partidos</h3>
+<div style="margin-bottom:10px">
+<label>Filtrar por jugador: <select id="playerFilter"><option value="">Todos los jugadores</option></select></label>
+</div>
+<div id="adminMatches"></div></div>
 <div class="card"><h3>Unificar jugadores</h3>
 <form id="mergeForm" style="display:flex;gap:8px;flex-wrap:wrap">
 <input id="fromName" placeholder="Alias (ej. Enio)"><span>→</span>
