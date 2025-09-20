@@ -52,6 +52,64 @@ header::before{
   z-index:1;
 }
 
+.admin-link{
+  margin-left:auto;
+}
+
+.admin-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:12px 20px;
+  background:rgba(255,255,255,0.1);
+  border:2px solid var(--yellow);
+  border-radius:25px;
+  color:var(--yellow);
+  text-decoration:none;
+  font-weight:600;
+  font-size:0.9rem;
+  transition:all 0.3s ease;
+  backdrop-filter:blur(10px);
+  position:relative;
+  overflow:hidden;
+}
+
+.admin-btn::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  transition:left 0.5s;
+}
+
+.admin-btn:hover::before{
+  left:100%;
+}
+
+.admin-btn:hover{
+  background:var(--yellow);
+  color:var(--blue);
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(255,208,0,0.4);
+}
+
+.admin-icon{
+  font-size:1.1em;
+  transition:transform 0.3s ease;
+}
+
+.admin-btn:hover .admin-icon{
+  transform:rotate(180deg);
+}
+
+.admin-text{
+  font-weight:700;
+  letter-spacing:0.5px;
+}
+
 .logo{
   flex-shrink:0;
   animation:float 3s ease-in-out infinite;
@@ -286,6 +344,16 @@ tbody tr:nth-child(odd):hover{
   
   .header-text h1{
     font-size:1.5rem;
+  }
+  
+  .admin-link{
+    margin-left:0;
+    margin-top:8px;
+  }
+  
+  .admin-btn{
+    padding:10px 16px;
+    font-size:0.85rem;
   }
   
   .tabs{
