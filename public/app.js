@@ -8,7 +8,14 @@ function renderTable(container, rows){
 }
 async function loadStandings(system, target){
   const res=await fetch(`/api/standings?system=${system}`); const data=await res.json();
-  const rows=data.map((r,i)=>({Pos:String(i+1).padStart(2,' '),Jugador:r.name,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts}));
+  const rows=data.map((r,i)=>{
+    const position=i+1;
+    let medal='';
+    if(position===1) medal='🥇';
+    else if(position===2) medal='🥈';
+    else if(position===3) medal='🥉';
+    return {Pos:`${medal} ${String(position).padStart(2,' ')}`,Jugador:r.name,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts};
+  });
   renderTable(target, rows);
 }
 async function loadMatches(target){

@@ -55,6 +55,7 @@ header::before{
 .logo{
   flex-shrink:0;
   animation:float 3s ease-in-out infinite;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
 
 @keyframes float{
@@ -231,6 +232,32 @@ tbody tr:nth-child(odd){
 
 tbody tr:nth-child(odd):hover{
   background:#dbeafe;
+}
+
+/* Podium styles */
+tbody tr:nth-child(1){
+  background:linear-gradient(135deg,#ffd700 0%,#ffed4e 100%);
+  font-weight:700;
+  box-shadow:0 2px 8px rgba(255,215,0,0.3);
+}
+
+tbody tr:nth-child(2){
+  background:linear-gradient(135deg,#c0c0c0 0%,#e8e8e8 100%);
+  font-weight:600;
+  box-shadow:0 2px 8px rgba(192,192,192,0.3);
+}
+
+tbody tr:nth-child(3){
+  background:linear-gradient(135deg,#cd7f32 0%,#daa520 100%);
+  font-weight:600;
+  box-shadow:0 2px 8px rgba(205,127,50,0.3);
+}
+
+tbody tr:nth-child(1):hover,
+tbody tr:nth-child(2):hover,
+tbody tr:nth-child(3):hover{
+  transform:scale(1.02);
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
 }
 
 .footer{
