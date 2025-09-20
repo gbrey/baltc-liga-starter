@@ -25,22 +25,22 @@ async function loadMatches(target){
 }
 // Grand Slam winners photos mapping - 16 unique tennis player photos from Unsplash
 const grandSlamPhotos = [
-  'https://images.unsplash.com/photo-1622163642998-1ea32b0bbc67?w=300&h=300&fit=crop&crop=face', // Tennis player 1
-  'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=face', // Tennis player 2  
-  'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=300&h=300&fit=crop&crop=face', // Tennis player 3
-  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=300&fit=crop&crop=face', // Tennis player 4
-  'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=300&fit=crop&crop=face', // Tennis player 5
-  'https://images.unsplash.com/photo-1594736797933-d0d62a3d7b99?w=300&h=300&fit=crop&crop=face', // Tennis player 6
-  'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=300&h=300&fit=crop&crop=face', // Tennis player 7
-  'https://images.unsplash.com/photo-1622163643022-1ea32b0bbc67?w=300&h=300&fit=crop&crop=face', // Tennis player 8
-  'https://images.unsplash.com/photo-1594736797944-d0d62a3d7b99?w=300&h=300&fit=crop&crop=face', // Tennis player 9
-  'https://images.unsplash.com/photo-1578662996453-48f60103fc96?w=300&h=300&fit=crop&crop=face', // Tennis player 10
-  'https://images.unsplash.com/photo-1544717297954-fa95b6ee9643?w=300&h=300&fit=crop&crop=face', // Tennis player 11
-  'https://images.unsplash.com/photo-1571019613465-1cb2f99b2d8b?w=300&h=300&fit=crop&crop=face', // Tennis player 12
-  'https://images.unsplash.com/photo-1551698618167-1dfe5d97d256?w=300&h=300&fit=crop&crop=face', // Tennis player 13
-  'https://images.unsplash.com/photo-1594736797955-d0d62a3d7b99?w=300&h=300&fit=crop&crop=face', // Tennis player 14
-  'https://images.unsplash.com/photo-1554068865876-24cecd4e34b8?w=300&h=300&fit=crop&crop=face', // Tennis player 15
-  'https://images.unsplash.com/photo-1622163643033-1ea32b0bbc67?w=300&h=300&fit=crop&crop=face'  // Tennis player 16
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face', // Tennis player 1
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face', // Tennis player 2  
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=face', // Tennis player 3
+  'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=300&h=300&fit=crop&crop=face', // Tennis player 4
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=face', // Tennis player 5
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&h=300&fit=crop&crop=face', // Tennis player 6
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=face', // Tennis player 7
+  'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face', // Tennis player 8
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face', // Tennis player 9
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=face', // Tennis player 10
+  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=300&h=300&fit=crop&crop=face', // Tennis player 11
+  'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=300&h=300&fit=crop&crop=face', // Tennis player 12
+  'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=300&h=300&fit=crop&crop=face', // Tennis player 13
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face', // Tennis player 14
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=face', // Tennis player 15
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face'  // Tennis player 16
 ];
 
 let allPlayers = [];

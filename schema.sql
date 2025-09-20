@@ -23,3 +23,6 @@ CREATE TABLE IF NOT EXISTS matches (
 CREATE INDEX IF NOT EXISTS idx_matches_winner ON matches(winner_id);
 CREATE INDEX IF NOT EXISTS idx_matches_loser ON matches(loser_id);
 CREATE INDEX IF NOT EXISTS idx_matches_date ON matches(date);
+
+-- Add photo column to existing players table if it doesn't exist
+ALTER TABLE players ADD COLUMN photo TEXT NULL;
