@@ -1,0 +1,13 @@
+{
+  "name": "baltc-liga-starter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "hono": "^4.4.6",
+    "bcryptjs": "^2.4.3"
+  },
+  "scripts": {
+    "build": "echo 'static'"
+  }
+}

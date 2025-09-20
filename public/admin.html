@@ -1,0 +1,24 @@
+<!doctype html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BALTC Liga — Admin</title><link rel="stylesheet" href="./style.css"></head><body>
+<header>Admin · BALTC</header><div class="container">
+<div class="card"><h3>Cargar partido</h3>
+<form id="matchForm"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+<label>Ganador<br><input id="winner" required></label>
+<label>Perdedor<br><input id="loser" required></label>
+<label>Score<br><input id="score" placeholder="6-4 / 4-6 / (10-6)" required></label>
+<label>Fecha (opcional)<br><input id="date" placeholder="YYYY-MM-DD"></label>
+</div><div style="margin-top:10px"><button class="tab">Guardar</button></div></form>
+<div id="saveMsg" class="small"></div></div>
+<div class="card"><h3>Partidos</h3><div id="adminMatches"></div></div>
+<div class="card"><h3>Unificar jugadores</h3>
+<form id="mergeForm" style="display:flex;gap:8px;flex-wrap:wrap">
+<input id="fromName" placeholder="Alias (ej. Enio)"><span>→</span>
+<input id="toName" placeholder="Nombre canónico (ej. Bendinelli)">
+<button class="tab">Unificar</button></form>
+<div id="mergeMsg" class="small"></div></div>
+<div class="card"><h3>Importar CSV</h3><p class="small">Formato: <code>Winner,Loser,Score,Date?</code></p>
+<textarea id="csvText" rows="6" style="width:100%"></textarea>
+<button id="btnImport" class="tab" style="margin-top:8px">Importar</button>
+<div id="impMsg" class="small"></div></div>
+</div><script type="module" src="./admin.js"></script></body></html>
