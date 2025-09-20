@@ -46,6 +46,85 @@
     </div>
     <div id="playersGrid"></div>
   </div>
+  
+  <!-- Roster Section -->
+  <div id="roster" class="card" style="display:none">
+    <div class="roster-header">
+      <button id="backButton" class="back-btn">← Volver</button>
+      <h2 id="rosterPlayerName">Roster de Jugador</h2>
+    </div>
+    
+    <div class="roster-content">
+      <!-- Player Info -->
+      <div class="player-profile">
+        <div class="player-photo-large">
+          <img id="rosterPlayerPhoto" src="" alt="" loading="lazy">
+        </div>
+        <div class="player-basic-info">
+          <h3 id="rosterPlayerNameLarge"></h3>
+          <p id="rosterPlayerJoinDate"></p>
+        </div>
+      </div>
+      
+      <!-- Stats Overview -->
+      <div class="stats-overview">
+        <div class="stat-card">
+          <div class="stat-number" id="rosterPosition">#0</div>
+          <div class="stat-label">Posición</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="rosterWins">0</div>
+          <div class="stat-label">Victorias</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="rosterLosses">0</div>
+          <div class="stat-label">Derrotas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="rosterWinPercentage">0%</div>
+          <div class="stat-label">% Éxito</div>
+        </div>
+      </div>
+      
+      <!-- Streaks -->
+      <div class="streaks-section">
+        <h4>📈 Rachas</h4>
+        <div class="streaks-grid">
+          <div class="streak-item">
+            <span class="streak-label">Racha actual:</span>
+            <span id="rosterCurrentStreak" class="streak-value">0 victorias</span>
+          </div>
+          <div class="streak-item">
+            <span class="streak-label">Mejor racha de victorias:</span>
+            <span id="rosterBestWinStreak" class="streak-value">0</span>
+          </div>
+          <div class="streak-item">
+            <span class="streak-label">Peor racha de derrotas:</span>
+            <span id="rosterBestLossStreak" class="streak-value">0</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Match History -->
+      <div class="match-history">
+        <h4>🏆 Historial de Partidos</h4>
+        <div id="rosterMatchesList" class="matches-list"></div>
+      </div>
+      
+      <!-- Opponents -->
+      <div class="opponents-section">
+        <div class="opponents-played">
+          <h4>👥 Oponentes Jugados</h4>
+          <div id="rosterOpponentsList" class="opponents-list"></div>
+        </div>
+        <div class="opponents-pending">
+          <h4>⏳ Oponentes Pendientes</h4>
+          <div id="rosterPendingOpponents" class="opponents-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <div class="footer">
     <div class="footer-content">
       <p>Hecho con ❤️ para el Buenos Aires Lawn Tennis Club</p>

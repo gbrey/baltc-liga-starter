@@ -36,7 +36,14 @@ function renderTable(container, rows, originalRows = null){
       img.style.verticalAlign = 'middle';
       img.style.objectFit = 'cover';
       td.appendChild(img);
-      td.appendChild(document.createTextNode(r[k]));
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = r[k];
+      nameSpan.style.cursor = 'pointer';
+      nameSpan.style.color = '#007bff';
+      nameSpan.style.textDecoration = 'underline';
+      nameSpan.onclick = () => showRoster(r.playerId);
+      td.appendChild(nameSpan);
     } else if (k === 'Ganador') {
       // Create image + text for Ganador column
       const img = document.createElement('img');
@@ -49,7 +56,14 @@ function renderTable(container, rows, originalRows = null){
       img.style.verticalAlign = 'middle';
       img.style.objectFit = 'cover';
       td.appendChild(img);
-      td.appendChild(document.createTextNode(r[k]));
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = r[k];
+      nameSpan.style.cursor = 'pointer';
+      nameSpan.style.color = '#007bff';
+      nameSpan.style.textDecoration = 'underline';
+      nameSpan.onclick = () => showRoster(originalRow.winnerId);
+      td.appendChild(nameSpan);
     } else if (k === 'Perdedor') {
       // Create image + text for Perdedor column
       const img = document.createElement('img');
@@ -62,7 +76,14 @@ function renderTable(container, rows, originalRows = null){
       img.style.verticalAlign = 'middle';
       img.style.objectFit = 'cover';
       td.appendChild(img);
-      td.appendChild(document.createTextNode(r[k]));
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = r[k];
+      nameSpan.style.cursor = 'pointer';
+      nameSpan.style.color = '#007bff';
+      nameSpan.style.textDecoration = 'underline';
+      nameSpan.onclick = () => showRoster(originalRow.loserId);
+      td.appendChild(nameSpan);
     } else {
       td.textContent = r[k];
     }
@@ -149,7 +170,7 @@ function renderPlayers(target, players){
         <div class="player-rank">#${rank}</div>
       </div>
       <div class="player-info">
-        <h4>${player.name}</h4>
+        <h4 class="player-name-clickable" onclick="showRoster(${player.id})">${player.name}</h4>
         <div class="player-stats">
           <div class="stat">
             <span class="stat-label" title="Victorias">🏆</span>
@@ -205,5 +226,176 @@ document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>
 document.querySelector('#playerSearch').addEventListener('input',(e)=>{
   filterPlayers(e.target.value);
 });
+
+// Back button event listener
+document.getElementById('backButton').addEventListener('click', goBack);
+
+// ---------- ROSTER FUNCTIONALITY
+let currentRosterPlayerId = null;
+let previousSection = null;
+
+async function showRoster(playerId) {
+  try {
+    // Store current section for back button
+    const activeSection = document.querySelector('.card:not([style*="display:none"])');
+    if (activeSection) {
+      previousSection = activeSection.id;
+    }
+    
+    // Hide all sections including tabs
+    document.querySelectorAll('.card').forEach(card => {
+      card.style.display = 'none';
+    });
+    
+    // Hide tabs navigation
+    document.querySelector('.tabs').style.display = 'none';
+    
+    // Show roster section
+    document.getElementById('roster').style.display = 'block';
+    
+    // Load roster data
+    const response = await fetch(`/api/players/${playerId}/roster`);
+    if (!response.ok) {
+      throw new Error('Player not found');
+    }
+    
+    const rosterData = await response.json();
+    currentRosterPlayerId = playerId;
+    
+    // Populate roster
+    populateRoster(rosterData);
+    
+  } catch (error) {
+    console.error('Error loading roster:', error);
+    alert('Error al cargar el roster del jugador');
+    goBack();
+  }
+}
+
+function populateRoster(data) {
+  const { player, stats, streaks, matches, opponents, not_played_against } = data;
+  
+  // Player basic info
+  document.getElementById('rosterPlayerName').textContent = `Roster de ${player.name}`;
+  document.getElementById('rosterPlayerNameLarge').textContent = player.name;
+  document.getElementById('rosterPlayerPhoto').src = getPlayerPhoto(player.name, player.id);
+  document.getElementById('rosterPlayerPhoto').alt = player.name;
+  
+  // Join date
+  const joinDate = new Date(player.created_at * 1000).toLocaleDateString('es-ES');
+  document.getElementById('rosterPlayerJoinDate').textContent = `Miembro desde ${joinDate}`;
+  
+  // Stats
+  document.getElementById('rosterPosition').textContent = `#${stats.position}`;
+  document.getElementById('rosterWins').textContent = stats.wins;
+  document.getElementById('rosterLosses').textContent = stats.losses;
+  document.getElementById('rosterWinPercentage').textContent = `${stats.win_percentage}%`;
+  
+  // Streaks
+  const currentStreakText = streaks.current > 0 ? 
+    `${streaks.current} ${streaks.current_type === 'win' ? 'victorias' : 'derrotas'}` : 
+    'Sin racha';
+  document.getElementById('rosterCurrentStreak').textContent = currentStreakText;
+  document.getElementById('rosterCurrentStreak').className = `streak-value ${streaks.current_type}`;
+  document.getElementById('rosterBestWinStreak').textContent = streaks.best_win;
+  document.getElementById('rosterBestLossStreak').textContent = streaks.best_loss;
+  
+  // Match history
+  renderMatchHistory(matches);
+  
+  // Opponents
+  renderOpponents(opponents, not_played_against);
+}
+
+function renderMatchHistory(matches) {
+  const container = document.getElementById('rosterMatchesList');
+  
+  if (!matches || matches.length === 0) {
+    container.innerHTML = '<p class="no-data">No hay partidos registrados</p>';
+    return;
+  }
+  
+  const matchesHtml = matches.map(match => {
+    const date = match.date ? 
+      new Date(match.date).toLocaleDateString('es-ES') : 
+      new Date(match.created_at * 1000).toLocaleDateString('es-ES');
+    
+    const resultClass = match.result === 'win' ? 'win' : 'loss';
+    const resultIcon = match.result === 'win' ? '🏆' : '❌';
+    const resultText = match.result === 'win' ? 'Ganó' : 'Perdió';
+    
+    return `
+      <div class="match-item ${resultClass}">
+        <div class="match-date">${date}</div>
+        <div class="match-opponent">
+          <img src="${getPlayerPhoto(match.opponent_name, match.opponent_id)}" alt="${match.opponent_name}" class="opponent-photo-small">
+          <span class="opponent-name" onclick="showRoster(${match.opponent_id})">${match.opponent_name}</span>
+        </div>
+        <div class="match-result">
+          <span class="result-icon">${resultIcon}</span>
+          <span class="result-text">${resultText}</span>
+        </div>
+        <div class="match-score">${match.score}</div>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = matchesHtml;
+}
+
+function renderOpponents(opponents, notPlayedAgainst) {
+  // Opponents played
+  const opponentsContainer = document.getElementById('rosterOpponentsList');
+  if (opponents && opponents.length > 0) {
+    const opponentsHtml = opponents.map(opponent => `
+      <div class="opponent-item" onclick="showRoster(${opponent.opponent_id})">
+        <img src="${getPlayerPhoto(opponent.opponent_name, opponent.opponent_id)}" alt="${opponent.opponent_name}" class="opponent-photo-small">
+        <span class="opponent-name">${opponent.opponent_name}</span>
+        <span class="times-played">${opponent.times_played} partido${opponent.times_played > 1 ? 's' : ''}</span>
+      </div>
+    `).join('');
+    opponentsContainer.innerHTML = opponentsHtml;
+  } else {
+    opponentsContainer.innerHTML = '<p class="no-data">No ha jugado contra nadie</p>';
+  }
+  
+  // Opponents not played against
+  const pendingContainer = document.getElementById('rosterPendingOpponents');
+  if (notPlayedAgainst && notPlayedAgainst.length > 0) {
+    const pendingHtml = notPlayedAgainst.map(opponent => `
+      <div class="opponent-item" onclick="showRoster(${opponent.id})">
+        <img src="${getPlayerPhoto(opponent.name, opponent.id)}" alt="${opponent.name}" class="opponent-photo-small">
+        <span class="opponent-name">${opponent.name}</span>
+        <span class="pending-badge">Pendiente</span>
+      </div>
+    `).join('');
+    pendingContainer.innerHTML = pendingHtml;
+  } else {
+    pendingContainer.innerHTML = '<p class="no-data">Ha jugado contra todos</p>';
+  }
+}
+
+function goBack() {
+  // Hide roster
+  document.getElementById('roster').style.display = 'none';
+  
+  // Show tabs navigation
+  document.querySelector('.tabs').style.display = 'flex';
+  
+  // Show previous section
+  if (previousSection) {
+    document.getElementById(previousSection).style.display = 'block';
+  } else {
+    // Default to standings A
+    document.getElementById('standingsA').style.display = 'block';
+  }
+  
+  currentRosterPlayerId = null;
+  previousSection = null;
+}
+
+// Make functions global
+window.showRoster = showRoster;
+window.goBack = goBack;
 
 loadStandings('A', document.querySelector('#tblA')); loadStandings('B', document.querySelector('#tblB')); loadMatches(document.querySelector('#tblM')); loadPlayers(document.querySelector('#playersGrid'));

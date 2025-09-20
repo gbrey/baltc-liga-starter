@@ -137,6 +137,187 @@ app.get('/api/players/stats', async (c) => {
   return c.json(results)
 })
 
+// Get detailed roster information for a specific player
+app.get('/api/players/:id/roster', async (c) => {
+  const playerId = c.req.param('id')
+  
+  // Get player basic info
+  const player = await c.env.DB.prepare(
+    `SELECT id, name, photo, created_at FROM players WHERE id = ?`
+  ).bind(playerId).first()
+  
+  if (!player) {
+    return c.json({ error: 'Player not found' }, 404)
+  }
+  
+  // Get all matches for this player with opponent info
+  const matches = await c.env.DB.prepare(`
+    SELECT 
+      m.id,
+      m.score,
+      m.date,
+      m.created_at,
+      CASE 
+        WHEN m.winner_id = ? THEN 'win'
+        ELSE 'loss'
+      END as result,
+      CASE 
+        WHEN m.winner_id = ? THEN l.name
+        ELSE w.name
+      END as opponent_name,
+      CASE 
+        WHEN m.winner_id = ? THEN l.id
+        ELSE w.id
+      END as opponent_id,
+      CASE 
+        WHEN m.winner_id = ? THEN l.photo
+        ELSE w.photo
+      END as opponent_photo
+    FROM matches m
+    JOIN players w ON w.id = m.winner_id
+    JOIN players l ON l.id = m.loser_id
+    WHERE m.winner_id = ? OR m.loser_id = ?
+    ORDER BY COALESCE(m.date, datetime(m.created_at, 'unixepoch')) DESC
+  `).bind(playerId, playerId, playerId, playerId, playerId, playerId).all()
+  
+  // Get current standings position
+  const standings = await c.env.DB.prepare(`
+    WITH player_stats AS (
+      SELECT 
+        p.id,
+        p.name,
+        COALESCE(wins.win_count, 0) as wins,
+        COALESCE(losses.loss_count, 0) as losses,
+        COALESCE(wins.win_count, 0) + COALESCE(losses.loss_count, 0) as total_matches
+      FROM players p
+      LEFT JOIN (
+        SELECT winner_id, COUNT(*) as win_count 
+        FROM matches 
+        GROUP BY winner_id
+      ) wins ON p.id = wins.winner_id
+      LEFT JOIN (
+        SELECT loser_id, COUNT(*) as loss_count 
+        FROM matches 
+        GROUP BY loser_id
+      ) losses ON p.id = losses.loser_id
+    ),
+    ranked_players AS (
+      SELECT 
+        id,
+        name,
+        wins,
+        losses,
+        total_matches,
+        ROW_NUMBER() OVER (ORDER BY wins DESC, total_matches DESC, name ASC) as position
+      FROM player_stats
+    )
+    SELECT position, wins, losses, total_matches
+    FROM ranked_players 
+    WHERE id = ?
+  `).bind(playerId).first()
+  
+  // Calculate streaks
+  let currentStreak = 0
+  let currentStreakType = 'none'
+  let bestWinStreak = 0
+  let bestLossStreak = 0
+  let tempWinStreak = 0
+  let tempLossStreak = 0
+  
+  if (matches.results && matches.results.length > 0) {
+    // Calculate current streak (from most recent match)
+    const mostRecent = matches.results[0]
+    currentStreakType = mostRecent.result
+    
+    for (const match of matches.results) {
+      if (match.result === currentStreakType) {
+        currentStreak++
+      } else {
+        break
+      }
+    }
+    
+    // Calculate best streaks
+    for (const match of matches.results) {
+      if (match.result === 'win') {
+        tempWinStreak++
+        tempLossStreak = 0
+        bestWinStreak = Math.max(bestWinStreak, tempWinStreak)
+      } else {
+        tempLossStreak++
+        tempWinStreak = 0
+        bestLossStreak = Math.max(bestLossStreak, tempLossStreak)
+      }
+    }
+  }
+  
+  // Get opponents played against
+  const opponents = await c.env.DB.prepare(`
+    SELECT DISTINCT
+      CASE 
+        WHEN m.winner_id = ? THEN l.id
+        ELSE w.id
+      END as opponent_id,
+      CASE 
+        WHEN m.winner_id = ? THEN l.name
+        ELSE w.name
+      END as opponent_name,
+      CASE 
+        WHEN m.winner_id = ? THEN l.photo
+        ELSE w.photo
+      END as opponent_photo,
+      COUNT(*) as times_played
+    FROM matches m
+    JOIN players w ON w.id = m.winner_id
+    JOIN players l ON l.id = m.loser_id
+    WHERE m.winner_id = ? OR m.loser_id = ?
+    GROUP BY opponent_id, opponent_name, opponent_photo
+    ORDER BY times_played DESC
+  `).bind(playerId, playerId, playerId, playerId, playerId).all()
+  
+  // Get players not played against yet
+  const notPlayedAgainst = await c.env.DB.prepare(`
+    SELECT p.id, p.name, p.photo
+    FROM players p
+    WHERE p.id != ? 
+    AND p.id NOT IN (
+      SELECT DISTINCT CASE 
+        WHEN m.winner_id = ? THEN m.loser_id
+        ELSE m.winner_id
+      END
+      FROM matches m
+      WHERE m.winner_id = ? OR m.loser_id = ?
+    )
+    ORDER BY p.name
+  `).bind(playerId, playerId, playerId, playerId).all()
+  
+  return c.json({
+    player: {
+      id: player.id,
+      name: player.name,
+      photo: player.photo,
+      created_at: player.created_at
+    },
+    stats: {
+      position: standings?.position || 0,
+      wins: standings?.wins || 0,
+      losses: standings?.losses || 0,
+      total_matches: standings?.total_matches || 0,
+      win_percentage: standings?.total_matches > 0 ? 
+        Math.round((standings.wins * 100.0 / standings.total_matches) * 10) / 10 : 0
+    },
+    streaks: {
+      current: currentStreak,
+      current_type: currentStreakType,
+      best_win: bestWinStreak,
+      best_loss: bestLossStreak
+    },
+    matches: matches.results || [],
+    opponents: opponents.results || [],
+    not_played_against: notPlayedAgainst.results || []
+  })
+})
+
 // ---------- ADMIN (Basic Auth con import perezoso de bcryptjs)
 const admin = new Hono<{ Bindings: Bindings }>()
 admin.use('*', async (c, next) => {
