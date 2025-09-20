@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs'
 type Bindings = { DB: D1Database, ADMIN_USER: string, ADMIN_PASS_HASH: string }
 const app = new Hono<{ Bindings: Bindings }>()
 
+app.get('/api/ping', (c) => c.json({ ok: true }))
+
 async function resolvePlayer(db: D1Database, rawName: string) {
   const name = rawName.trim()
   let row = await db.prepare(`SELECT p.id, p.name FROM aliases a JOIN players p ON p.id=a.player_id WHERE a.name=?`).bind(name).first()
