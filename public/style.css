@@ -59,55 +59,35 @@ header::before{
 .admin-btn{
   display:flex;
   align-items:center;
-  gap:8px;
-  padding:12px 20px;
-  background:rgba(255,255,255,0.1);
-  border:2px solid var(--yellow);
-  border-radius:25px;
-  color:var(--yellow);
+  gap:6px;
+  padding:8px 16px;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:8px;
+  color:#ffffff;
   text-decoration:none;
-  font-weight:600;
-  font-size:0.9rem;
-  transition:all 0.3s ease;
-  backdrop-filter:blur(10px);
+  font-weight:500;
+  font-size:0.85rem;
+  transition:all 0.2s ease;
+  backdrop-filter:blur(8px);
   position:relative;
-  overflow:hidden;
-}
-
-.admin-btn::before{
-  content:'';
-  position:absolute;
-  top:0;
-  left:-100%;
-  width:100%;
-  height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
-  transition:left 0.5s;
-}
-
-.admin-btn:hover::before{
-  left:100%;
 }
 
 .admin-btn:hover{
-  background:var(--yellow);
-  color:var(--blue);
-  transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(255,208,0,0.4);
+  background:rgba(255,255,255,0.25);
+  border-color:rgba(255,255,255,0.3);
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
 }
 
 .admin-icon{
-  font-size:1.1em;
-  transition:transform 0.3s ease;
-}
-
-.admin-btn:hover .admin-icon{
-  transform:rotate(180deg);
+  font-size:0.9em;
+  opacity:0.9;
 }
 
 .admin-text{
-  font-weight:700;
-  letter-spacing:0.5px;
+  font-weight:500;
+  letter-spacing:0.3px;
 }
 
 .logo{
@@ -125,6 +105,7 @@ header::before{
   margin:0;
   font-size:2rem;
   font-weight:800;
+  color:#ffffff;
   text-shadow:2px 2px 4px rgba(0,0,0,0.3);
   letter-spacing:-0.025em;
 }
@@ -352,8 +333,8 @@ tbody tr:nth-child(odd):hover{
   }
   
   .admin-btn{
-    padding:10px 16px;
-    font-size:0.85rem;
+    padding:6px 12px;
+    font-size:0.8rem;
   }
   
   .tabs{
