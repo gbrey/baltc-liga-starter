@@ -151,3 +151,7 @@ app.get('/admin', async (c) => {
 })
 
 export default app
+// 👇 ESTE es el enganche que necesita Pages Functions
+export const onRequest: PagesFunction = async (context) => {
+  return app.fetch(context.request, context.env, context)
+}
