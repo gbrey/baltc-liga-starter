@@ -19,6 +19,25 @@ function getPlayerPhoto(playerName, playerId = null) {
   return grandSlamPhotos[photoIndex];
 }
 
+// Helper function to get recent results for a player
+async function getPlayerRecentResults(playerId) {
+  try {
+    const response = await fetch(`/api/players/${playerId}/roster`);
+    if (!response.ok) return [];
+    
+    const data = await response.json();
+    const recentMatches = data.matches.slice(0, 5); // Get last 5 matches
+    
+    return recentMatches.map(match => ({
+      result: match.result,
+      opponent: match.opponent_name
+    }));
+  } catch (error) {
+    console.error('Error getting recent results:', error);
+    return [];
+  }
+}
+
 function renderTable(container, rows, originalRows = null){
   const tbl=document.createElement('table'); const thead=document.createElement('thead'); const tbody=document.createElement('tbody'); tbl.appendChild(thead); tbl.appendChild(tbody);
   if(!rows||rows.length===0){ container.innerHTML='<p class="small">Sin datos.</p>'; return; }
@@ -28,7 +47,8 @@ function renderTable(container, rows, originalRows = null){
     if (k === 'Jugador') {
       // Create image + text for Jugador column
       const img = document.createElement('img');
-      img.src = getPlayerPhoto(r[k], r.playerId);
+      const originalRow = originalRows ? originalRows[index] : r;
+      img.src = getPlayerPhoto(r[k], originalRow.playerId);
       img.style.width = '20px';
       img.style.height = '20px';
       img.style.borderRadius = '50%';
@@ -40,10 +60,64 @@ function renderTable(container, rows, originalRows = null){
       const nameSpan = document.createElement('span');
       nameSpan.textContent = r[k];
       nameSpan.style.cursor = 'pointer';
-      nameSpan.style.color = '#007bff';
-      nameSpan.style.textDecoration = 'underline';
-      nameSpan.onclick = () => showRoster(r.playerId);
+      nameSpan.style.color = '#1e40af';
+      nameSpan.style.textDecoration = 'none';
+      nameSpan.style.fontWeight = '500';
+      nameSpan.style.transition = 'color 0.2s ease';
+      nameSpan.onmouseover = () => nameSpan.style.color = '#3b82f6';
+      nameSpan.onmouseout = () => nameSpan.style.color = '#1e40af';
+      nameSpan.onclick = () => showRoster(originalRow.playerId);
       td.appendChild(nameSpan);
+    } else if (k === 'Racha') {
+      // Create recent results column
+      const resultsContainer = document.createElement('div');
+      resultsContainer.style.display = 'flex';
+      resultsContainer.style.gap = '4px';
+      resultsContainer.style.justifyContent = 'center';
+      resultsContainer.style.alignItems = 'center';
+      
+      if (r[k] && r[k].length > 0) {
+        r[k].forEach(result => {
+          const resultDot = document.createElement('div');
+          resultDot.style.width = '12px';
+          resultDot.style.height = '12px';
+          resultDot.style.borderRadius = '50%';
+          resultDot.style.border = '1px solid rgba(0,0,0,0.2)';
+          resultDot.title = `${result.result === 'win' ? 'Victoria' : 'Derrota'} vs ${result.opponent}`;
+          
+          if (result.result === 'win') {
+            resultDot.style.backgroundColor = '#22c55e';
+          } else {
+            resultDot.style.backgroundColor = '#ef4444';
+          }
+          
+          resultsContainer.appendChild(resultDot);
+        });
+        
+        // Fill remaining slots with empty dots if less than 5
+        while (resultsContainer.children.length < 5) {
+          const emptyDot = document.createElement('div');
+          emptyDot.style.width = '12px';
+          emptyDot.style.height = '12px';
+          emptyDot.style.borderRadius = '50%';
+          emptyDot.style.backgroundColor = '#e5e7eb';
+          emptyDot.style.border = '1px solid #d1d5db';
+          resultsContainer.appendChild(emptyDot);
+        }
+      } else {
+        // No matches yet - show 5 empty dots
+        for (let i = 0; i < 5; i++) {
+          const emptyDot = document.createElement('div');
+          emptyDot.style.width = '12px';
+          emptyDot.style.height = '12px';
+          emptyDot.style.borderRadius = '50%';
+          emptyDot.style.backgroundColor = '#e5e7eb';
+          emptyDot.style.border = '1px solid #d1d5db';
+          resultsContainer.appendChild(emptyDot);
+        }
+      }
+      
+      td.appendChild(resultsContainer);
     } else if (k === 'Ganador') {
       // Create image + text for Ganador column
       const img = document.createElement('img');
@@ -60,8 +134,12 @@ function renderTable(container, rows, originalRows = null){
       const nameSpan = document.createElement('span');
       nameSpan.textContent = r[k];
       nameSpan.style.cursor = 'pointer';
-      nameSpan.style.color = '#007bff';
-      nameSpan.style.textDecoration = 'underline';
+      nameSpan.style.color = '#1e40af';
+      nameSpan.style.textDecoration = 'none';
+      nameSpan.style.fontWeight = '500';
+      nameSpan.style.transition = 'color 0.2s ease';
+      nameSpan.onmouseover = () => nameSpan.style.color = '#3b82f6';
+      nameSpan.onmouseout = () => nameSpan.style.color = '#1e40af';
       nameSpan.onclick = () => showRoster(originalRow.winnerId);
       td.appendChild(nameSpan);
     } else if (k === 'Perdedor') {
@@ -80,8 +158,12 @@ function renderTable(container, rows, originalRows = null){
       const nameSpan = document.createElement('span');
       nameSpan.textContent = r[k];
       nameSpan.style.cursor = 'pointer';
-      nameSpan.style.color = '#007bff';
-      nameSpan.style.textDecoration = 'underline';
+      nameSpan.style.color = '#1e40af';
+      nameSpan.style.textDecoration = 'none';
+      nameSpan.style.fontWeight = '500';
+      nameSpan.style.transition = 'color 0.2s ease';
+      nameSpan.onmouseover = () => nameSpan.style.color = '#3b82f6';
+      nameSpan.onmouseout = () => nameSpan.style.color = '#1e40af';
       nameSpan.onclick = () => showRoster(originalRow.loserId);
       td.appendChild(nameSpan);
     } else {
@@ -93,15 +175,28 @@ function renderTable(container, rows, originalRows = null){
 }
 async function loadStandings(system, target){
   const res=await fetch(`/api/standings?system=${system}`); const data=await res.json();
-  const rows=data.map((r,i)=>{
+  
+  // Get recent results for each player
+  const playersWithResults = await Promise.all(data.map(async (player) => {
+    const recentMatches = await getPlayerRecentResults(player.id);
+    return { ...player, recentResults: recentMatches };
+  }));
+  
+  const rows=playersWithResults.map((r,i)=>{
     const position=i+1;
     let medal='';
     if(position===1) medal='🥇';
     else if(position===2) medal='🥈';
     else if(position===3) medal='🥉';
-    return {Pos:`${String(position).padStart(2,' ')} ${medal}`,Jugador:r.name,playerId:r.id,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts};
+    return {Pos:`${String(position).padStart(2,' ')} ${medal}`,Jugador:r.name,playerId:r.id,Racha:r.recentResults,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts};
   });
-  renderTable(target, rows);
+  
+  // Remove playerId from display but keep it for photo lookup
+  const displayRows = rows.map(r => {
+    const {playerId, ...displayRow} = r;
+    return displayRow;
+  });
+  renderTable(target, displayRows, rows); // Pass original rows for photo lookup
 }
 async function loadMatches(target){
   const res=await fetch('/api/matches'); const data=await res.json();
@@ -170,7 +265,7 @@ function renderPlayers(target, players){
         <div class="player-rank">#${rank}</div>
       </div>
       <div class="player-info">
-        <h4 class="player-name-clickable" onclick="showRoster(${player.id})">${player.name}</h4>
+        <h4 class="player-name-clickable" onclick="showRoster(${player.id})" style="color: #1e40af; font-weight: 500; transition: color 0.2s ease; cursor: pointer;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#1e40af'">${player.name}</h4>
         <div class="player-stats">
           <div class="stat">
             <span class="stat-label" title="Victorias">🏆</span>
@@ -329,7 +424,7 @@ function renderMatchHistory(matches) {
         <div class="match-date">${date}</div>
         <div class="match-opponent">
           <img src="${getPlayerPhoto(match.opponent_name, match.opponent_id)}" alt="${match.opponent_name}" class="opponent-photo-small">
-          <span class="opponent-name" onclick="showRoster(${match.opponent_id})">${match.opponent_name}</span>
+          <span class="opponent-name" onclick="showRoster(${match.opponent_id})" style="color: #1e40af; font-weight: 500; transition: color 0.2s ease; cursor: pointer;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#1e40af'">${match.opponent_name}</span>
         </div>
         <div class="match-result">
           <span class="result-icon">${resultIcon}</span>
@@ -350,7 +445,7 @@ function renderOpponents(opponents, notPlayedAgainst) {
     const opponentsHtml = opponents.map(opponent => `
       <div class="opponent-item" onclick="showRoster(${opponent.opponent_id})">
         <img src="${getPlayerPhoto(opponent.opponent_name, opponent.opponent_id)}" alt="${opponent.opponent_name}" class="opponent-photo-small">
-        <span class="opponent-name">${opponent.opponent_name}</span>
+        <span class="opponent-name" style="color: #1e40af; font-weight: 500; transition: color 0.2s ease; cursor: pointer;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#1e40af'">${opponent.opponent_name}</span>
         <span class="times-played">${opponent.times_played} partido${opponent.times_played > 1 ? 's' : ''}</span>
       </div>
     `).join('');
@@ -365,7 +460,7 @@ function renderOpponents(opponents, notPlayedAgainst) {
     const pendingHtml = notPlayedAgainst.map(opponent => `
       <div class="opponent-item" onclick="showRoster(${opponent.id})">
         <img src="${getPlayerPhoto(opponent.name, opponent.id)}" alt="${opponent.name}" class="opponent-photo-small">
-        <span class="opponent-name">${opponent.name}</span>
+        <span class="opponent-name" style="color: #1e40af; font-weight: 500; transition: color 0.2s ease; cursor: pointer;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#1e40af'">${opponent.name}</span>
         <span class="pending-badge">Pendiente</span>
       </div>
     `).join('');
