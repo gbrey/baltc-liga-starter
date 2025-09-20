@@ -1,9 +1,73 @@
 const $=(s)=>document.querySelector(s);
-function renderTable(container, rows){
+
+// Helper function to get player photo
+function getPlayerPhoto(playerName, playerId = null) {
+  // If we have player data with photo, use it
+  if (playerId && allPlayers && allPlayers.length > 0) {
+    const player = allPlayers.find(p => p.id === playerId);
+    if (player && player.photo) {
+      return player.photo;
+    }
+  }
+  
+  // Otherwise use a consistent photo based on name hash
+  const hash = playerName.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  const photoIndex = Math.abs(hash) % grandSlamPhotos.length;
+  return grandSlamPhotos[photoIndex];
+}
+
+function renderTable(container, rows, originalRows = null){
   const tbl=document.createElement('table'); const thead=document.createElement('thead'); const tbody=document.createElement('tbody'); tbl.appendChild(thead); tbl.appendChild(tbody);
   if(!rows||rows.length===0){ container.innerHTML='<p class="small">Sin datos.</p>'; return; }
   const cols=Object.keys(rows[0]); const trh=document.createElement('tr'); cols.forEach(h=>{const th=document.createElement('th'); th.textContent=h; trh.appendChild(th)}); thead.appendChild(trh);
-  rows.forEach(r=>{const tr=document.createElement('tr'); cols.forEach(k=>{const td=document.createElement('td'); td.textContent=r[k]; tr.appendChild(td)}); tbody.appendChild(tr)});
+  rows.forEach((r, index)=>{const tr=document.createElement('tr'); cols.forEach(k=>{
+    const td=document.createElement('td');
+    if (k === 'Jugador') {
+      // Create image + text for Jugador column
+      const img = document.createElement('img');
+      img.src = getPlayerPhoto(r[k], r.playerId);
+      img.style.width = '20px';
+      img.style.height = '20px';
+      img.style.borderRadius = '50%';
+      img.style.marginRight = '8px';
+      img.style.verticalAlign = 'middle';
+      img.style.objectFit = 'cover';
+      td.appendChild(img);
+      td.appendChild(document.createTextNode(r[k]));
+    } else if (k === 'Ganador') {
+      // Create image + text for Ganador column
+      const img = document.createElement('img');
+      const originalRow = originalRows ? originalRows[index] : r;
+      img.src = getPlayerPhoto(r[k], originalRow.winnerId);
+      img.style.width = '20px';
+      img.style.height = '20px';
+      img.style.borderRadius = '50%';
+      img.style.marginRight = '8px';
+      img.style.verticalAlign = 'middle';
+      img.style.objectFit = 'cover';
+      td.appendChild(img);
+      td.appendChild(document.createTextNode(r[k]));
+    } else if (k === 'Perdedor') {
+      // Create image + text for Perdedor column
+      const img = document.createElement('img');
+      const originalRow = originalRows ? originalRows[index] : r;
+      img.src = getPlayerPhoto(r[k], originalRow.loserId);
+      img.style.width = '20px';
+      img.style.height = '20px';
+      img.style.borderRadius = '50%';
+      img.style.marginRight = '8px';
+      img.style.verticalAlign = 'middle';
+      img.style.objectFit = 'cover';
+      td.appendChild(img);
+      td.appendChild(document.createTextNode(r[k]));
+    } else {
+      td.textContent = r[k];
+    }
+    tr.appendChild(td);
+  }); tbody.appendChild(tr)});
   container.innerHTML=''; container.appendChild(tbl);
 }
 async function loadStandings(system, target){
@@ -14,14 +78,19 @@ async function loadStandings(system, target){
     if(position===1) medal='🥇';
     else if(position===2) medal='🥈';
     else if(position===3) medal='🥉';
-    return {Pos:`${String(position).padStart(2,' ')} ${medal}`,Jugador:r.name,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts};
+    return {Pos:`${String(position).padStart(2,' ')} ${medal}`,Jugador:r.name,playerId:r.id,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts};
   });
   renderTable(target, rows);
 }
 async function loadMatches(target){
   const res=await fetch('/api/matches'); const data=await res.json();
-  const rows=data.map(r=>({Fecha:r.date ?? new Date(r.created_at*1000).toISOString().slice(0,10),Ganador:r.winner,Perdedor:r.loser,Score:r.score}));
-  renderTable(target, rows);
+  const rows=data.map(r=>({Fecha:r.date ?? new Date(r.created_at*1000).toISOString().slice(0,10),Ganador:r.winner,winnerId:r.winner_id,Perdedor:r.loser,loserId:r.loser_id,Score:r.score}));
+  // Remove the ID columns from display but keep them for photo lookup
+  const displayRows = rows.map(r => {
+    const {winnerId, loserId, ...displayRow} = r;
+    return displayRow;
+  });
+  renderTable(target, displayRows, rows); // Pass original rows for photo lookup
 }
 // Grand Slam winners photos mapping - 16 unique tennis player photos from Unsplash
 const grandSlamPhotos = [

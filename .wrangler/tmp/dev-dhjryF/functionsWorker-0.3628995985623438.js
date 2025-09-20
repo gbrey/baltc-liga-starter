@@ -3815,7 +3815,7 @@ var init_path = __esm({
     __name2(resolvePlayer, "resolvePlayer");
     app.get("/api/matches", async (c) => {
       const playerId = c.req.query("player");
-      let query = `SELECT m.id, w.name as winner, l.name as loser, m.score, m.date, m.created_at
+      let query = `SELECT m.id, w.name as winner, w.id as winner_id, l.name as loser, l.id as loser_id, m.score, m.date, m.created_at
                FROM matches m
                JOIN players w ON w.id=m.winner_id
                JOIN players l ON l.id=m.loser_id`;
