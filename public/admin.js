@@ -16,7 +16,8 @@ async function reloadMatches(){
 }
 document.querySelector('#matchForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const payload={winner:$('#winner').value.trim(), loser:$('#loser').value.trim(), score:$('#score').value.trim(), date:$('#date').value.trim()||undefined};
+  const dateValue=$('#date').value.trim();
+  const payload={winner:$('#winner').value.trim(), loser:$('#loser').value.trim(), score:$('#score').value.trim(), date:dateValue||new Date().toISOString().slice(0,10)};
   const res=await authFetch('/api/admin/match',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
   document.querySelector('#saveMsg').textContent=res.ok?'Guardado ✅':'Error ❌'; if(res.ok){ e.target.reset(); await reloadMatches(); }
 });
@@ -30,5 +31,10 @@ document.querySelector('#btnImport').addEventListener('click', async ()=>{
   document.querySelector('#impMsg').textContent=res.ok?'Importado ✅':'Error ❌'; if(res.ok) await reloadMatches();
 });
 document.querySelector('#playerFilter').addEventListener('change', reloadMatches);
+function initDatePicker(){
+  const today=new Date().toISOString().slice(0,10);
+  $('#date').value=today;
+}
+initDatePicker();
 loadPlayers();
 reloadMatches();
