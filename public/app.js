@@ -14,7 +14,7 @@ async function loadStandings(system, target){
     if(position===1) medal='🥇';
     else if(position===2) medal='🥈';
     else if(position===3) medal='🥉';
-    return {Pos:`${medal} ${String(position).padStart(2,' ')}`,Jugador:r.name,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts};
+    return {Pos:String(position).padStart(2,' '),Medalla:medal,Jugador:r.name,PJ:r.pj,PG:r.pg,PP:r.pp,Pts:r.pts};
   });
   renderTable(target, rows);
 }
