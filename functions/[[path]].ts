@@ -151,7 +151,15 @@ app.get('/admin', async (c) => {
 })
 
 export default app
-// 👇 ESTE es el enganche que necesita Pages Functions
-export const onRequest: PagesFunction = async (context) => {
-  return app.fetch(context.request, context.env, context)
+export const onRequest: PagesFunction = async (ctx) => {
+  const url = new URL(ctx.request.url)
+
+  // Rutas que maneja Hono:
+  if (url.pathname.startsWith('/api') || url.pathname === '/admin') {
+    return app.fetch(ctx.request, ctx.env, ctx)
+  }
+
+  // Para TODO lo demás (/, /style.css, /app.js, /admin.js, etc.)
+  // delegar al servidor estático de Pages:
+  return ctx.next()
 }
