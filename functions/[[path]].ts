@@ -135,19 +135,29 @@ app.route('/api/admin', admin)
 app.get('/admin', async (c) => {
   const auth = c.req.header('Authorization') || ''
   const realm = 'BALTC-ADMIN'
+
   if (!auth.startsWith('Basic ')) {
-    return c.body('<p>Autenticando...</p>', 401, {
+    return c.body('Auth required', 401, {
       'WWW-Authenticate': `Basic realm="${realm}"`,
-      'Content-Type': 'text/html; charset=utf-8'
+      'Content-Type': 'text/plain; charset=utf-8',
     })
   }
+
   const b64 = auth.slice(6)
   const [user, pass] = atob(b64).split(':')
   const { default: bcrypt } = await import('bcryptjs')
-  const ok = (user === c.env.ADMIN_USER) && bcrypt.compareSync(pass, c.env.ADMIN_PASS_HASH)
-  if (!ok) return c.body('Unauthorized', 401, { 'WWW-Authenticate': `Basic realm="${realm}"` })
-  const html = `<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><div class="container"><h3>Admin</h3><script type="module" src="/admin.js"></script>`
-  return c.body(html, 200, { 'Content-Type': 'text/html; charset=utf-8' })
+  const ok =
+    user === c.env.ADMIN_USER &&
+    bcrypt.compareSync(pass, c.env.ADMIN_PASS_HASH)
+
+  if (!ok) {
+    return c.body('Unauthorized', 401, {
+      'WWW-Authenticate': `Basic realm="${realm}"`,
+    })
+  }
+
+  // ✅ si pasó la auth → dejá que Pages sirva el HTML estático
+  return c.env.ASSETS.fetch(c.req.raw)
 })
 
 export default app
