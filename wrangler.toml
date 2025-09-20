@@ -1,0 +1,12 @@
+# wrangler.toml
+name = "baltc-liga-local"
+compatibility_date = "2025-09-20"
+
+[assets]
+directory = "./public"
+
+[[d1_databases]]
+binding = "DB"                     # así se llama en tu código: c.env.DB
+database_name = "baltc_liga_dev"   # nombre lógico local
+# database_id puede ser cualquier UUID para local; usá uno dummy:
+database_id = "11111111-1111-1111-1111-111111111111"

@@ -1,28 +1,492 @@
-<!doctype html><html lang="es"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BALTC Liga — Admin</title><link rel="stylesheet" href="./style.css"></head><body>
-<header>Admin · BALTC</header><div class="container">
-<div class="card"><h3>Cargar partido</h3>
-<form id="matchForm"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-<label>Ganador<br><input id="winner" required></label>
-<label>Perdedor<br><input id="loser" required></label>
-<label>Score<br><input id="score" placeholder="6-4 / 4-6 / (10-6)" required></label>
-<label>Fecha (opcional)<br><input id="date" type="date"></label>
-</div><div style="margin-top:10px"><button class="tab">Guardar</button></div></form>
-<div id="saveMsg" class="small"></div></div>
-<div class="card"><h3>Partidos</h3>
-<div style="margin-bottom:10px">
-<label>Filtrar por jugador: <select id="playerFilter"><option value="">Todos los jugadores</option></select></label>
-</div>
-<div id="adminMatches"></div></div>
-<div class="card"><h3>Unificar jugadores</h3>
-<form id="mergeForm" style="display:flex;gap:8px;flex-wrap:wrap">
-<input id="fromName" placeholder="Alias (ej. Enio)"><span>→</span>
-<input id="toName" placeholder="Nombre canónico (ej. Bendinelli)">
-<button class="tab">Unificar</button></form>
-<div id="mergeMsg" class="small"></div></div>
-<div class="card"><h3>Importar CSV</h3><p class="small">Formato: <code>Winner,Loser,Score,Date?</code></p>
-<textarea id="csvText" rows="6" style="width:100%"></textarea>
-<button id="btnImport" class="tab" style="margin-top:8px">Importar</button>
-<div id="impMsg" class="small"></div></div>
-</div><script type="module" src="./admin.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BALTC Liga — Admin</title>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .admin-header {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .admin-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-btn {
+      padding: 12px 20px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: #374151;
+    }
+    
+    .nav-btn:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+    
+    .nav-btn.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    
+    .admin-section {
+      display: none;
+    }
+    
+    .admin-section.active {
+      display: block;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .filter-group label {
+      font-size: 0.85rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+      padding: 6px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s ease;
+    }
+    
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+    
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s ease;
+    }
+    
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .form-group label {
+      font-size: 0.9rem;
+      color: #374151;
+      font-weight: 500;
+    }
+    
+    .form-group input,
+    .form-group select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+    
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    
+    .status-message {
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-size: 0.9rem;
+    }
+    
+    .status-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    
+    .status-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    
+    @media (max-width: 768px) {
+      .admin-header > div {
+        flex-direction: column !important;
+        gap: 10px;
+        text-align: center;
+      }
+      
+      .admin-nav {
+        flex-direction: column;
+      }
+      
+      .section-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .filters {
+        justify-content: stretch;
+      }
+      
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Photo upload styles */
+  #photoInput {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 5px;
+  }
+  
+  small {
+    color: #666;
+    font-size: 0.8em;
+    display: block;
+    margin-top: 5px;
+  }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h1 style="margin: 0;">🏆 BALTC Liga - Panel de Administración</h1>
+        <a href="/" class="btn-primary" style="text-decoration: none; display: flex; align-items: center; gap: 6px;">
+          🏠 Volver al Menú Principal
+        </a>
+      </div>
+      <p style="margin: 0;">Gestion completa de jugadores y partidos</p>
+    </div>
+    
+    <nav class="admin-nav">
+      <button class="nav-btn active" data-section="players">👥 Jugadores</button>
+      <button class="nav-btn" data-section="matches">🎾 Partidos</button>
+      <button class="nav-btn" data-section="tools">🔧 Herramientas</button>
+    </nav>
+    
+    <!-- SECCIÓN JUGADORES -->
+    <div id="players-section" class="admin-section active">
+      <div class="section-header">
+        <h2>👥 Gestión de Jugadores</h2>
+        <div class="filters">
+          <div class="filter-group">
+            <label>Ordenar por:</label>
+            <select id="playerSort">
+              <option value="name" selected>Nombre</option>
+              <option value="created">Fecha creación</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Buscar:</label>
+            <input type="text" id="playerSearch" placeholder="Nombre del jugador...">
+          </div>
+          <button class="btn-primary" id="addPlayerBtn">➕ Nuevo Jugador</button>
+        </div>
+      </div>
+      
+        <div class="card">
+          <div id="playersList"></div>
+        </div>
+        
+        <!-- Modal para subir foto -->
+        <div id="photoModal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 id="photoModalTitle">Subir Foto del Jugador</h3>
+              <button class="modal-close" id="closePhotoModal">&times;</button>
+            </div>
+            <form id="photoForm" enctype="multipart/form-data">
+              <div class="form-group">
+                <label>Seleccionar imagen:</label>
+                <input type="file" id="photoInput" accept="image/*" required>
+                <small>Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
+              </div>
+              <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary">📸 Subir Foto</button>
+                <button type="button" class="btn-secondary" id="cancelPhotoModal">Cancelar</button>
+              </div>
+            </form>
+            <div id="photoMsg"></div>
+          </div>
+        </div>
+    </div>
+    
+    <!-- SECCIÓN PARTIDOS -->
+    <div id="matches-section" class="admin-section">
+      <div class="section-header">
+        <h2>🎾 Gestión de Partidos</h2>
+        <div class="filters">
+          <div class="filter-group">
+            <label>Filtrar por jugador:</label>
+            <select id="matchPlayerFilter">
+              <option value="">Todos los jugadores</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Ordenar por:</label>
+            <select id="matchSort">
+              <option value="date">Fecha</option>
+              <option value="created">Fecha creación</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="addMatchBtn">➕ Nuevo Partido</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div id="matchesList"></div>
+      </div>
+    </div>
+    
+    <!-- SECCIÓN HERRAMIENTAS -->
+    <div id="tools-section" class="admin-section">
+      <div class="section-header">
+        <h2>🔧 Herramientas de Administración</h2>
+      </div>
+      
+      <div class="card">
+        <h3>🔄 Unificar Jugadores</h3>
+        <p class="small">Combina dos nombres de jugador en uno solo</p>
+        <form id="mergeForm" class="form-grid">
+          <div class="form-group">
+            <label>Alias (ej. Enio)</label>
+            <input id="fromName" placeholder="Nombre a cambiar">
+          </div>
+          <div class="form-group">
+            <label>Nombre canónico (ej. Bendinelli)</label>
+            <input id="toName" placeholder="Nombre final">
+          </div>
+        </form>
+        <button class="btn-primary" id="mergeBtn">🔄 Unificar</button>
+        <div id="mergeMsg"></div>
+      </div>
+      
+      <div class="card">
+        <h3>📊 Importar CSV</h3>
+        <p class="small">Formato: <code>Winner,Loser,Score,Date?</code></p>
+        <textarea id="csvText" rows="6" style="width:100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace;"></textarea>
+        <button class="btn-primary" id="btnImport" style="margin-top: 10px;">📊 Importar</button>
+        <div id="impMsg"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MODAL PARA CREAR/EDITAR JUGADOR -->
+  <div id="playerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="playerModalTitle">Nuevo Jugador</h3>
+        <button class="modal-close" id="closePlayerModal">&times;</button>
+      </div>
+      <form id="playerForm">
+        <div class="form-group">
+          <label>Nombre del jugador:</label>
+          <input type="text" id="playerName" required>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="btn-primary">💾 Guardar</button>
+          <button type="button" class="btn-secondary" id="cancelPlayerModal">Cancelar</button>
+        </div>
+      </form>
+      <div id="playerMsg"></div>
+    </div>
+  </div>
+  
+  <!-- MODAL PARA CREAR/EDITAR PARTIDO -->
+  <div id="matchModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="matchModalTitle">Nuevo Partido</h3>
+        <button class="modal-close" id="closeMatchModal">&times;</button>
+      </div>
+      <form id="matchForm">
+        <div class="form-grid">
+        <div class="form-group">
+          <label>Ganador:</label>
+          <select id="winner" required>
+            <option value="">Seleccionar ganador...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Perdedor:</label>
+          <select id="loser" required disabled>
+            <option value="">Primero selecciona el ganador</option>
+          </select>
+        </div>
+          <div class="form-group">
+            <label>Score:</label>
+            <input type="text" id="score" placeholder="6-4 / 4-6 / (10-6)" required>
+          </div>
+          <div class="form-group">
+            <label>Fecha:</label>
+            <input type="date" id="date">
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="btn-primary">💾 Guardar</button>
+          <button type="button" class="btn-secondary" id="cancelMatchModal">Cancelar</button>
+        </div>
+      </form>
+      <div id="matchMsg"></div>
+    </div>
+  </div>
+  
+  <!-- MODAL DE LOGIN -->
+  <div id="loginModal" class="modal active">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🔐 Acceso Administrativo</h3>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Usuario:</label>
+          <input type="text" id="loginUsername" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña:</label>
+          <input type="password" id="loginPassword" required>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="btn-primary">🚀 Ingresar</button>
+        </div>
+      </form>
+      <div id="loginMsg"></div>
+    </div>
+  </div>
+  
+  <script type="module" src="./admin.js"></script>
+</body>
+</html>

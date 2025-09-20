@@ -23,10 +23,118 @@ async function loadMatches(target){
   const rows=data.map(r=>({Fecha:r.date ?? new Date(r.created_at*1000).toISOString().slice(0,10),Ganador:r.winner,Perdedor:r.loser,Score:r.score}));
   renderTable(target, rows);
 }
+// Grand Slam winners photos mapping - 16 unique tennis player photos from Unsplash
+const grandSlamPhotos = [
+  'https://images.unsplash.com/photo-1622163642998-1ea32b0bbc67?w=300&h=300&fit=crop&crop=face', // Tennis player 1
+  'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=face', // Tennis player 2  
+  'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=300&h=300&fit=crop&crop=face', // Tennis player 3
+  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=300&fit=crop&crop=face', // Tennis player 4
+  'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=300&fit=crop&crop=face', // Tennis player 5
+  'https://images.unsplash.com/photo-1594736797933-d0d62a3d7b99?w=300&h=300&fit=crop&crop=face', // Tennis player 6
+  'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=300&h=300&fit=crop&crop=face', // Tennis player 7
+  'https://images.unsplash.com/photo-1622163643022-1ea32b0bbc67?w=300&h=300&fit=crop&crop=face', // Tennis player 8
+  'https://images.unsplash.com/photo-1594736797944-d0d62a3d7b99?w=300&h=300&fit=crop&crop=face', // Tennis player 9
+  'https://images.unsplash.com/photo-1578662996453-48f60103fc96?w=300&h=300&fit=crop&crop=face', // Tennis player 10
+  'https://images.unsplash.com/photo-1544717297954-fa95b6ee9643?w=300&h=300&fit=crop&crop=face', // Tennis player 11
+  'https://images.unsplash.com/photo-1571019613465-1cb2f99b2d8b?w=300&h=300&fit=crop&crop=face', // Tennis player 12
+  'https://images.unsplash.com/photo-1551698618167-1dfe5d97d256?w=300&h=300&fit=crop&crop=face', // Tennis player 13
+  'https://images.unsplash.com/photo-1594736797955-d0d62a3d7b99?w=300&h=300&fit=crop&crop=face', // Tennis player 14
+  'https://images.unsplash.com/photo-1554068865876-24cecd4e34b8?w=300&h=300&fit=crop&crop=face', // Tennis player 15
+  'https://images.unsplash.com/photo-1622163643033-1ea32b0bbc67?w=300&h=300&fit=crop&crop=face'  // Tennis player 16
+];
+
+let allPlayers = [];
+
+async function loadPlayers(target){
+  const res=await fetch('/api/players/stats'); const data=await res.json();
+  allPlayers = data;
+  // Mostrar todos los jugadores al cargar la página
+  renderPlayers(target, allPlayers);
+}
+
+function renderPlayers(target, players){
+  target.innerHTML='';
+  if(!players||players.length===0){ 
+    target.innerHTML='<p class="small">No se encontraron jugadores que coincidan con la búsqueda.</p>'; 
+    return; 
+  }
+  
+  // Ordenar jugadores alfabéticamente por nombre
+  const sortedPlayers = [...players].sort((a, b) => a.name.localeCompare(b.name));
+  
+  sortedPlayers.forEach((player,index)=>{
+    const card=document.createElement('div'); card.className='player-card';
+    const photoIndex=index%grandSlamPhotos.length;
+    
+    // El ranking se basa en los puntos del torneo, no en el orden alfabético
+    // Buscar la posición original del jugador en allPlayers (ordenado por puntos)
+    const originalIndex = allPlayers.findIndex(p => p.id === player.id);
+    const rank = originalIndex + 1;
+    
+    // Use real photo if available, otherwise use random photo
+    const photoSrc = player.photo || grandSlamPhotos[photoIndex];
+    
+    card.innerHTML=`
+      <div class="player-photo">
+        <img src="${photoSrc}" alt="${player.name}" loading="lazy">
+        <div class="player-rank">#${rank}</div>
+      </div>
+      <div class="player-info">
+        <h4>${player.name}</h4>
+        <div class="player-stats">
+          <div class="stat">
+            <span class="stat-label" title="Victorias">🏆</span>
+            <span class="stat-value wins">${player.wins}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" title="Derrotas">❌</span>
+            <span class="stat-value losses">${player.losses}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" title="% Éxito">📊</span>
+            <span class="stat-value percentage">${player.win_percentage}%</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" title="Partidos Pendientes">⏳</span>
+            <span class="stat-value pending">${player.pending_matches}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    target.appendChild(card);
+  });
+}
+
+function filterPlayers(searchTerm){
+  if(!searchTerm || searchTerm.trim() === ''){
+    // Si no hay término de búsqueda, mostrar todos los jugadores
+    renderPlayers(document.querySelector('#playersGrid'), allPlayers);
+  } else {
+    // Filtrar jugadores que coincidan con el término de búsqueda
+    const filtered = allPlayers.filter(player => 
+      player.name.toLowerCase().includes(searchTerm.toLowerCase().trim())
+    );
+    renderPlayers(document.querySelector('#playersGrid'), filtered);
+  }
+}
+
 document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
   if(btn.dataset.tab){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
-    ['standingsA','standingsB','matches'].forEach(id=>document.getElementById(id).style.display='none');
+    ['standingsA','standingsB','matches','players'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById(btn.dataset.tab).style.display='block';
+    
+    // Si se cambia a la pestaña de jugadores, asegurar que se muestren todos
+    if(btn.dataset.tab === 'players' && allPlayers.length > 0){
+      const searchInput = document.querySelector('#playerSearch');
+      if(!searchInput.value || searchInput.value.trim() === ''){
+        renderPlayers(document.querySelector('#playersGrid'), allPlayers);
+      }
+    }
   }
 }));
-loadStandings('A', document.querySelector('#tblA')); loadStandings('B', document.querySelector('#tblB')); loadMatches(document.querySelector('#tblM'));
+
+document.querySelector('#playerSearch').addEventListener('input',(e)=>{
+  filterPlayers(e.target.value);
+});
+
+loadStandings('A', document.querySelector('#tblA')); loadStandings('B', document.querySelector('#tblB')); loadMatches(document.querySelector('#tblM')); loadPlayers(document.querySelector('#playersGrid'));
