@@ -739,11 +739,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (credentials) {
     isAuthenticated = true
     hideLoginModal()
-    // Load data after a short delay to ensure DOM is ready
-    setTimeout(() => {
-      loadPlayersForDropdowns()
-      loadPlayers()
-    }, 100)
+  // Load data after a short delay to ensure DOM is ready
+  setTimeout(() => {
+    loadPlayersForDropdowns()
+    loadPlayers()
+  }, 100)
+  
+  // Dashboard refresh button
+  $('#refreshDashboardBtn')?.addEventListener('click', () => {
+    loadBotDashboard()
+  })
   } else {
     showLoginModal()
   }
@@ -915,12 +920,6 @@ function renderTopPlayers(players) {
   $('#topPlayers').innerHTML = playersHtml
 }
 
-// Add refresh button event listener
-document.addEventListener('DOMContentLoaded', () => {
-  $('#refreshDashboardBtn')?.addEventListener('click', () => {
-    loadBotDashboard()
-  })
-})
 
 // Make functions global for onclick handlers
 window.editPlayer = editPlayer
