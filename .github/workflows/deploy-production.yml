@@ -1,0 +1,59 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+      - 'public/**'
+      - 'wrangler.prod.toml'
+      - 'package.json'
+  workflow_dispatch: # Permite ejecutar manualmente
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Pages
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Validate configuration
+      run: npm run validate:prod
+    
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/pages-action@v1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        projectName: baltc-liga-starter
+        directory: ./public
+        wranglerVersion: '4'
+        wranglerConfigPath: wrangler.prod.toml
+    
+    - name: Wait for deployment
+      run: sleep 30
+    
+    - name: Verify production deployment
+      run: npm run verify:prod
+      continue-on-error: true
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ $? -eq 0 ]; then
+          echo "✅ Deploy to production successful!"
+        else
+          echo "❌ Deploy to production failed!"
+          exit 1
+        fi

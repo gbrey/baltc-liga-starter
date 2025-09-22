@@ -27,14 +27,14 @@ async function validateConfig() {
   let errors = 0;
   let warnings = 0;
 
-  // Verificar que wrangler.toml apunta a desarrollo
+  // Verificar que wrangler.toml apunta a producción (configuración unificada)
   try {
-    const devConfig = fs.readFileSync('wrangler.toml', 'utf8');
+    const config = fs.readFileSync('wrangler.toml', 'utf8');
     
-    if (devConfig.includes('baltc_liga_dev')) {
-      log('✅ wrangler.toml configurado para desarrollo', colors.green);
+    if (config.includes('ca7ea78d-e491-433c-9f79-fc245235a35a')) {
+      log('✅ wrangler.toml configurado para producción (configuración unificada)', colors.green);
     } else {
-      log('❌ wrangler.toml NO apunta a desarrollo local', colors.red);
+      log('❌ wrangler.toml NO tiene configuración de producción', colors.red);
       errors++;
     }
   } catch (error) {
@@ -76,6 +76,14 @@ async function validateConfig() {
   } catch (error) {
     log('⚠️  No se pudo verificar el estado de git', colors.yellow);
     warnings++;
+  }
+
+  // Verificar que .dev.vars existe para desarrollo local
+  if (fs.existsSync('.dev.vars')) {
+    log('✅ .dev.vars existe para desarrollo local', colors.green);
+  } else {
+    log('❌ .dev.vars no existe para desarrollo local', colors.red);
+    errors++;
   }
 
   // Verificar que el directorio scripts existe

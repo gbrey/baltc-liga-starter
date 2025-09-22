@@ -734,7 +734,7 @@ async function checkAdminAuth(c: any) {
     if (!ok) {
       return {
         success: false,
-        response: c.body('❌ Credenciales incorrectas\n\nUsuario: admin\nContraseña: admin', 401, {
+        response: c.body('❌ Credenciales incorrectas\n\nUsuario: admin\nContraseña: CategoriaC', 401, {
           'WWW-Authenticate': `Basic realm="${realm}"`,
           'Content-Type': 'text/plain; charset=utf-8',
         })
@@ -745,7 +745,7 @@ async function checkAdminAuth(c: any) {
   } catch (error) {
     return {
       success: false,
-      response: c.body('❌ Error de autenticación\n\nUsuario: admin\nContraseña: admin', 401, {
+      response: c.body('❌ Error de autenticación\n\nUsuario: admin\nContraseña: CategoriaC', 401, {
         'WWW-Authenticate': `Basic realm="${realm}"`,
         'Content-Type': 'text/plain; charset=utf-8',
       })
@@ -894,9 +894,42 @@ admin.post('/players/:id/photo', async (c) => {
       return c.text('File too large (max 5MB)', 400)
     }
     
-    // Convert file to base64
+    // Convert file to base64 using a compatible method
     const arrayBuffer = await file.arrayBuffer()
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    const uint8Array = new Uint8Array(arrayBuffer)
+    
+    // Convert to base64 using a method compatible with Cloudflare Workers
+    let binary = ''
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i])
+    }
+    
+    // Use Buffer.from if available, otherwise fallback to manual base64 encoding
+    let base64: string
+    try {
+      // Try using Buffer (available in some environments)
+      base64 = Buffer.from(uint8Array).toString('base64')
+    } catch {
+      // Fallback to manual base64 encoding
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+      let result = ''
+      let i = 0
+      
+      while (i < uint8Array.length) {
+        const a = uint8Array[i++]
+        const b = i < uint8Array.length ? uint8Array[i++] : 0
+        const c = i < uint8Array.length ? uint8Array[i++] : 0
+        
+        const bitmap = (a << 16) | (b << 8) | c
+        
+        result += chars.charAt((bitmap >> 18) & 63)
+        result += chars.charAt((bitmap >> 12) & 63)
+        result += i - 2 < uint8Array.length ? chars.charAt((bitmap >> 6) & 63) : '='
+        result += i - 1 < uint8Array.length ? chars.charAt(bitmap & 63) : '='
+      }
+      base64 = result
+    }
+    
     const dataUrl = `data:${file.type};base64,${base64}`
     
     // Update player photo in database
