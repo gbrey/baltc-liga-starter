@@ -5,5 +5,5 @@ pages_build_output_dir = "./public"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "baltc_liga_prod"
-database_id = "79d8f80c-2a5e-4843-898a-4640a4296201"
+database_name = "baltc-db"
+database_id = "ca7ea78d-e491-433c-9f79-fc245235a35a"
