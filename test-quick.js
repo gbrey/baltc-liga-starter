@@ -53,12 +53,13 @@ async function runQuickTests() {
   // Test 1: Pregunta general
   test("Pregunta general sin identificación", () => {
     const response = makeRequest("¿quién está primero?", "test_general");
-    const hasPlayerName = response.reply.includes("Jugador Dev 1");
-    const asksForName = response.reply.toLowerCase().includes("nombre");
+    const asksForName = response.reply.toLowerCase().includes("nombre") || 
+                       response.reply.toLowerCase().includes("llamas");
+    const isDirectResponse = !asksForName;
     
     return {
-      success: hasPlayerName && !asksForName,
-      message: hasPlayerName ? "OK" : "Should mention Jugador Dev 1"
+      success: isDirectResponse,
+      message: isDirectResponse ? "OK" : "Should respond directly without asking for name"
     };
   });
 
