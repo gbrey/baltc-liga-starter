@@ -335,7 +335,7 @@ REGLAS DE IDENTIFICACIÓN:
 
 Si hay datos disponibles en la base de datos, úsalos para responder. Si no tienes los datos que pide, dilo claramente. Máximo 2-3 oraciones:`
 
-        const response = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await c.env.AI.run('@cf/meta/llama-3.2-3b-instruct', {
           messages: [
             {
               role: 'user',
