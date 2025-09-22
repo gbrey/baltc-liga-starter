@@ -16,5 +16,4 @@ binding = "AI"
 # KV para memoria de conversaciones
 [[kv_namespaces]]
 binding = "CONVERSATIONS"
-id = "baltc-conversations-prod"
-preview_id = "baltc-conversations-prod"
+id = "d6bdd7cff5564a88b218301bdc4af27f"

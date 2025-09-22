@@ -16,7 +16,7 @@ const colors = {
 };
 
 // URL de producción (cambiar por la URL real cuando esté desplegado)
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://baltc-liga.pages.dev';
+const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://baltc-liga-starter.pages.dev';
 
 async function makeProductionRequest(message, player = 'test_user') {
   const url = new URL(`${PRODUCTION_URL}/api/bot`);

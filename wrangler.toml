@@ -3,11 +3,11 @@ name = "baltc-liga"
 compatibility_date = "2025-01-20"
 pages_build_output_dir = "./public"
 
-# Base de datos para desarrollo local
+# Base de datos para producción
 [[d1_databases]]
 binding = "DB"
-database_name = "baltc_liga_dev"
-database_id = "9126a8ac-b391-45cb-bb46-9505e96e24dc"
+database_name = "baltc-db"
+database_id = "ca7ea78d-e491-433c-9f79-fc245235a35a"
 
 # Workers AI - Modelo Llama 3.1 8B (gratuito)
 [ai]
@@ -16,5 +16,4 @@ binding = "AI"
 # KV para memoria de conversaciones
 [[kv_namespaces]]
 binding = "CONVERSATIONS"
-id = "baltc-conversations-dev"
-preview_id = "baltc-conversations-dev"
+id = "d6bdd7cff5564a88b218301bdc4af27f"
