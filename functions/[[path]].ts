@@ -420,19 +420,56 @@ app.get('/api/players/:id/roster', async (c) => {
   })
 })
 
-// ---------- ADMIN (Basic Auth con import perezoso de bcryptjs)
+// ---------- ADMIN (Sin middleware automático - solo Basic Auth manual)
 const admin = new Hono<{ Bindings: Bindings }>()
-admin.use('*', async (c, next) => {
-  const { basicAuth } = await import('hono/basic-auth')
-  const { default: bcrypt } = await import('bcryptjs')
-  const mw = basicAuth({
-    verifyUser: (u, p) => (u === c.env.ADMIN_USER) && bcrypt.compareSync(p, c.env.ADMIN_PASS_HASH),
-    realm: 'BALTC-ADMIN'
-  })
-  return mw(c, next)
-})
+
+// Helper function para verificar autenticación
+async function checkAdminAuth(c: any) {
+  const auth = c.req.header('Authorization') || ''
+  const realm = 'BALTC Liga Admin'
+
+  if (!auth.startsWith('Basic ')) {
+    return {
+      success: false,
+      response: c.body('🔐 Autenticación requerida\n\nUsuario: admin\nContraseña: admin', 401, {
+        'WWW-Authenticate': `Basic realm="${realm}"`,
+        'Content-Type': 'text/plain; charset=utf-8',
+      })
+    }
+  }
+
+  try {
+    const b64 = auth.slice(6)
+    const [user, pass] = atob(b64).split(':')
+    const { default: bcrypt } = await import('bcryptjs')
+    const ok = user === c.env.ADMIN_USER && bcrypt.compareSync(pass, c.env.ADMIN_PASS_HASH)
+
+    if (!ok) {
+      return {
+        success: false,
+        response: c.body('❌ Credenciales incorrectas\n\nUsuario: admin\nContraseña: admin', 401, {
+          'WWW-Authenticate': `Basic realm="${realm}"`,
+          'Content-Type': 'text/plain; charset=utf-8',
+        })
+      }
+    }
+
+    return { success: true, response: null }
+  } catch (error) {
+    return {
+      success: false,
+      response: c.body('❌ Error de autenticación\n\nUsuario: admin\nContraseña: admin', 401, {
+        'WWW-Authenticate': `Basic realm="${realm}"`,
+        'Content-Type': 'text/plain; charset=utf-8',
+      })
+    }
+  }
+}
 
 admin.post('/match', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const { winner, loser, score, date } = await c.req.json() as any
   if (!winner || !loser || !score) return c.text('Missing fields', 400)
   if (winner.trim() === loser.trim()) return c.text('Players must be different', 400)
@@ -445,12 +482,18 @@ admin.post('/match', async (c) => {
 })
 
 admin.delete('/match/:id', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const id = Number(c.req.param('id'))
   await c.env.DB.prepare(`DELETE FROM matches WHERE id=?`).bind(id).run()
   return c.json({ ok: true })
 })
 
 admin.post('/import', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const text = await c.req.text()
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
   const header = lines.shift()
@@ -474,6 +517,9 @@ admin.post('/import', async (c) => {
 
 // ---------- PLAYER CRUD
 admin.get('/players', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const sort = c.req.query('sort') || 'name'
   const search = c.req.query('search') || ''
   
@@ -519,6 +565,9 @@ admin.get('/players', async (c) => {
 })
 
 admin.post('/players', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const { name } = await c.req.json() as any
   if (!name || !name.trim()) return c.text('Name is required', 400)
   
@@ -535,6 +584,9 @@ admin.post('/players', async (c) => {
 
 // Upload player photo
 admin.post('/players/:id/photo', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const playerId = c.req.param('id')
   
   try {
@@ -572,6 +624,9 @@ admin.post('/players/:id/photo', async (c) => {
 })
 
 admin.put('/players/:id', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const id = Number(c.req.param('id'))
   const { name } = await c.req.json() as any
   
@@ -589,6 +644,9 @@ admin.put('/players/:id', async (c) => {
 })
 
 admin.delete('/players/:id', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const id = Number(c.req.param('id'))
   
   // Check if player has matches
@@ -605,6 +663,9 @@ admin.delete('/players/:id', async (c) => {
 
 // ---------- MATCH CRUD
 admin.get('/matches', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const playerId = c.req.query('player')
   const sort = c.req.query('sort') || 'date'
   
@@ -641,6 +702,9 @@ admin.get('/matches', async (c) => {
 })
 
 admin.put('/matches/:id', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const id = Number(c.req.param('id'))
   const { winner, loser, score, date } = await c.req.json() as any
   
@@ -658,6 +722,9 @@ admin.put('/matches/:id', async (c) => {
 })
 
 admin.post('/merge', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
   const { fromName, toName } = await c.req.json() as any
   if (!fromName || !toName) return c.text('Missing names', 400)
   const to = await resolvePlayer(c.env.DB, toName)
