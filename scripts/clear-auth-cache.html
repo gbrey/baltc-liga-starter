@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar Caché de Autenticación - BALTC Liga</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        .credentials {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .button {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .warning {
+            background: rgba(255, 193, 7, 0.2);
+            border-left-color: #ffc107;
+            border-left: 4px solid #ffc107;
+        }
+        .warning h3 {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Limpiar Caché de Autenticación</h1>
+        
+        <div class="step">
+            <h3>📋 Credenciales de Administración</h3>
+            <div class="credentials">
+                <strong>Usuario:</strong> admin<br>
+                <strong>Contraseña:</strong> admin
+            </div>
+        </div>
+
+        <div class="step warning">
+            <h3>⚠️ Problema Actual</h3>
+            <p>El navegador está mostrando inconsistencias en la autenticación - a veces muestra el diálogo del navegador, a veces un modal. Esto puede deberse a credenciales cacheadas incorrectamente.</p>
+        </div>
+
+        <div class="step">
+            <h3>🔧 Solución 1: Limpiar Caché del Navegador</h3>
+            <p><strong>Chrome/Edge:</strong></p>
+            <ol>
+                <li>Presiona <code>Ctrl+Shift+Delete</code> (Windows) o <code>Cmd+Shift+Delete</code> (Mac)</li>
+                <li>Selecciona "Caché de imágenes y archivos"</li>
+                <li>Selecciona "Todo el tiempo"</li>
+                <li>Haz clic en "Borrar datos"</li>
+            </ol>
+            
+            <p><strong>Firefox:</strong></p>
+            <ol>
+                <li>Presiona <code>Ctrl+Shift+Delete</code> (Windows) o <code>Cmd+Shift+Delete</code> (Mac)</li>
+                <li>Selecciona "Caché"</li>
+                <li>Selecciona "Todo"</li>
+                <li>Haz clic en "Limpiar ahora"</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🔑 Solución 2: Limpiar Credenciales Guardadas</h3>
+            <p><strong>Chrome:</strong></p>
+            <ol>
+                <li>Ve a <code>chrome://settings/passwords</code></li>
+                <li>Busca "localhost" o "baltc-liga"</li>
+                <li>Elimina las credenciales guardadas</li>
+            </ol>
+            
+            <p><strong>Firefox:</strong></p>
+            <ol>
+                <li>Ve a <code>about:logins</code></li>
+                <li>Busca "localhost" o "baltc-liga"</li>
+                <li>Elimina las credenciales guardadas</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🌐 Solución 3: Forzar Diálogo del Navegador</h3>
+            <p>Para que siempre aparezca el diálogo del navegador:</p>
+            <ol>
+                <li>Abre una ventana de incógnito/privada</li>
+                <li>Ve a <a href="http://localhost:8787/admin" class="button">Panel de Administración</a></li>
+                <li>Ingresa las credenciales cuando aparezca el diálogo</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🧪 Probar Autenticación</h3>
+            <p>Después de limpiar la caché, prueba acceder al panel de administración:</p>
+            <a href="http://localhost:8787/admin" class="button">🔐 Panel de Administración</a>
+            <a href="http://localhost:8787" class="button">🏠 Página Principal</a>
+        </div>
+
+        <div class="step">
+            <h3>📱 Alternativa: Usar Curl</h3>
+            <p>Si sigues teniendo problemas, puedes usar curl para probar la autenticación:</p>
+            <div class="credentials">
+                curl -u admin:admin http://localhost:8787/admin
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh para mostrar el estado actual
+        console.log('🔐 Página de limpieza de autenticación cargada');
+        console.log('📋 Credenciales: admin / admin');
+        
+        // Verificar si estamos en localhost
+        if (window.location.hostname !== 'localhost') {
+            document.querySelector('.step h3').innerHTML = '⚠️ Esta página debe abrirse en localhost';
+        }
+    </script>
+</body>
+</html>

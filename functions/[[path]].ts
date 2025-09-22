@@ -679,30 +679,38 @@ app.route('/api/admin', admin)
 // opcional: /admin con challenge nativo
 app.get('/admin', async (c) => {
   const auth = c.req.header('Authorization') || ''
-  const realm = 'BALTC-ADMIN'
+  const realm = 'BALTC Liga Admin'
 
   if (!auth.startsWith('Basic ')) {
-    return c.body('Auth required', 401, {
+    return c.body('🔐 Autenticación requerida para acceder al panel de administración\n\nUsuario: admin\nContraseña: admin', 401, {
       'WWW-Authenticate': `Basic realm="${realm}"`,
       'Content-Type': 'text/plain; charset=utf-8',
     })
   }
 
-  const b64 = auth.slice(6)
-  const [user, pass] = atob(b64).split(':')
-  const { default: bcrypt } = await import('bcryptjs')
-  const ok =
-    user === c.env.ADMIN_USER &&
-    bcrypt.compareSync(pass, c.env.ADMIN_PASS_HASH)
+  try {
+    const b64 = auth.slice(6)
+    const [user, pass] = atob(b64).split(':')
+    const { default: bcrypt } = await import('bcryptjs')
+    const ok =
+      user === c.env.ADMIN_USER &&
+      bcrypt.compareSync(pass, c.env.ADMIN_PASS_HASH)
 
-  if (!ok) {
-    return c.body('Unauthorized', 401, {
+    if (!ok) {
+      return c.body('❌ Credenciales incorrectas\n\nUsuario: admin\nContraseña: admin', 401, {
+        'WWW-Authenticate': `Basic realm="${realm}"`,
+        'Content-Type': 'text/plain; charset=utf-8',
+      })
+    }
+
+    // ✅ si pasó la auth → dejá que Pages sirva el HTML estático
+    return c.env.ASSETS.fetch(c.req.raw)
+  } catch (error) {
+    return c.body('❌ Error de autenticación\n\nUsuario: admin\nContraseña: admin', 401, {
       'WWW-Authenticate': `Basic realm="${realm}"`,
+      'Content-Type': 'text/plain; charset=utf-8',
     })
   }
-
-  // ✅ si pasó la auth → dejá que Pages sirva el HTML estático
-  return c.env.ASSETS.fetch(c.req.raw)
 })
 
 export const onRequest: any = async (ctx: any) => {

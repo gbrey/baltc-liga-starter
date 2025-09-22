@@ -6,7 +6,7 @@
   "scripts": {
     "build": "echo 'static'",
     "dev": "npx wrangler pages dev --port 8787",
-    "deploy": "npx wrangler pages deploy ./public --project-name=baltc-liga-starter",
+    "deploy": "npx wrangler pages deploy ./public --project-name=baltc-liga-starter --compatibility-date=2025-01-20 --config=wrangler.prod.toml",
     "test:local": "node scripts/test-apis.js local",
     "test:production": "node scripts/test-apis.js production",
     "test:curl:local": "./scripts/test-apis-curl.sh local",
@@ -14,7 +14,10 @@
     "test:all": "npm run test:local && npm run test:production",
     "monitor": "bash scripts/monitor-deploy.sh",
     "logs": "bash scripts/watch-logs.sh",
-    "deploy-and-test": "bash scripts/deploy-and-test.sh"
+    "deploy-and-test": "bash scripts/deploy-and-test.sh",
+    "env:dev": "bash scripts/switch-env.sh dev",
+    "env:prod": "bash scripts/switch-env.sh prod",
+    "auth:help": "open scripts/clear-auth-cache.html"
   },
   "devDependencies": {
     "bcryptjs": "^3.0.2",
