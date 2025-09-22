@@ -1028,6 +1028,34 @@ admin.post('/merge', async (c) => {
   return c.json({ ok: true })
 })
 
+// Dashboard de administración del bot
+admin.get('/bot-dashboard', async (c) => {
+  const authResult = await checkAdminAuth(c)
+  if (!authResult.success) return authResult.response
+
+  try {
+    // Obtener estadísticas de uso del bot desde KV
+    const stats = await getBotUsageStats(c.env.CONVERSATIONS)
+    
+    // Obtener datos de la liga
+    const leagueStats = await getLeagueStats(c.env.DB)
+    
+    return c.json({
+      success: true,
+      data: {
+        botUsage: stats,
+        leagueData: leagueStats,
+        timestamp: new Date().toISOString()
+      }
+    })
+  } catch (error) {
+    return c.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, 500)
+  }
+})
+
 app.route('/api/admin', admin)
 
 // /admin - sin autenticación (solo sirve el HTML estático)
@@ -1047,6 +1075,123 @@ export const onRequest: any = async (ctx: any) => {
   // Para TODO lo demás (/, /style.css, /app.js, /admin.js, etc.)
   // delegar al servidor estático de Pages:
   return ctx.next()
+}
+
+// ========== FUNCIONES DE DASHBOARD DE ADMINISTRACIÓN ==========
+
+// Obtener estadísticas de uso del bot desde KV
+async function getBotUsageStats(kv: any) {
+  try {
+    // Listar todas las claves de perfiles
+    const profileKeys = await kv.list({ prefix: 'profile:' })
+    const conversationKeys = await kv.list({ prefix: 'conversation:' })
+    
+    const stats = {
+      totalUsers: profileKeys.keys.length,
+      totalConversations: conversationKeys.keys.length,
+      activeUsers: 0,
+      totalMessages: 0,
+      topUsers: [] as any[],
+      recentActivity: [] as any[]
+    }
+    
+    // Procesar perfiles para obtener estadísticas
+    for (const key of profileKeys.keys) {
+      const profileData = await kv.get(key.name)
+      if (profileData) {
+        const profile = JSON.parse(profileData)
+        
+        // Usuario activo si ha enviado mensajes en los últimos 7 días
+        const lastSeen = new Date(profile.lastSeen)
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        if (lastSeen > sevenDaysAgo) {
+          stats.activeUsers++
+        }
+        
+        // Agregar a top users
+        stats.topUsers.push({
+          playerId: profile.playerId,
+          conversationCount: profile.conversationCount || 0,
+          lastSeen: profile.lastSeen,
+          isNew: profile.isNew
+        })
+      }
+    }
+    
+    // Ordenar usuarios por actividad
+    stats.topUsers.sort((a, b) => b.conversationCount - a.conversationCount)
+    stats.topUsers = stats.topUsers.slice(0, 10) // Top 10
+    
+    // Procesar conversaciones para contar mensajes
+    for (const key of conversationKeys.keys) {
+      const conversationData = await kv.get(key.name)
+      if (conversationData) {
+        const conversation = JSON.parse(conversationData)
+        stats.totalMessages += conversation.length
+      }
+    }
+    
+    return stats
+  } catch (error) {
+    console.log('Error getting bot usage stats:', error)
+    return {
+      totalUsers: 0,
+      totalConversations: 0,
+      activeUsers: 0,
+      totalMessages: 0,
+      topUsers: [],
+      recentActivity: []
+    }
+  }
+}
+
+// Obtener estadísticas de la liga
+async function getLeagueStats(db: any) {
+  try {
+    // Total de jugadores
+    const playersResult = await db.prepare('SELECT COUNT(*) as count FROM players').first()
+    const totalPlayers = (playersResult as any)?.count || 0
+    
+    // Total de partidos
+    const matchesResult = await db.prepare('SELECT COUNT(*) as count FROM matches').first()
+    const totalMatches = (matchesResult as any)?.count || 0
+    
+    // Partidos este mes
+    const thisMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
+    const monthlyResult = await db.prepare(`
+      SELECT COUNT(*) as count FROM matches 
+      WHERE strftime('%Y-%m', datetime(created_at, 'unixepoch')) = ?
+    `).bind(thisMonth).first()
+    const monthlyMatches = (monthlyResult as any)?.count || 0
+    
+    // Top jugadores por victorias
+    const topPlayersResult = await db.prepare(`
+      WITH wins AS (SELECT winner_id, COUNT(*) as victories FROM matches GROUP BY winner_id)
+      SELECT p.name, COALESCE(w.victories, 0) as victories
+      FROM players p
+      LEFT JOIN wins w ON w.winner_id = p.id
+      ORDER BY victories DESC
+      LIMIT 5
+    `).all()
+    
+    // Estadísticas de actividad
+    const activityStats = {
+      totalPlayers,
+      totalMatches,
+      monthlyMatches,
+      topPlayers: topPlayersResult.results || []
+    }
+    
+    return activityStats
+  } catch (error) {
+    console.log('Error getting league stats:', error)
+    return {
+      totalPlayers: 0,
+      totalMatches: 0,
+      monthlyMatches: 0,
+      topPlayers: []
+    }
+  }
 }
 
 // ========== FUNCIONES DE MEMORIA Y PERFIL DE JUGADOR ==========

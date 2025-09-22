@@ -101,6 +101,8 @@ function initNavigation() {
         loadPlayers()
       } else if (section === 'matches') {
         loadMatches()
+      } else if (section === 'bot-dashboard') {
+        loadBotDashboard()
       }
     })
   })
@@ -806,6 +808,117 @@ document.addEventListener('DOMContentLoaded', () => {
   })
   $('#photoModal').addEventListener('click', (e) => {
     if (e.target === $('#photoModal')) closePhotoModal()
+  })
+})
+
+// ---------- BOT DASHBOARD
+async function loadBotDashboard() {
+  try {
+    // Show loading state
+    $('#botStats').innerHTML = '<div class="loading">🔄 Cargando estadísticas del bot...</div>'
+    $('#topUsers').innerHTML = '<div class="loading">🔄 Cargando usuarios...</div>'
+    $('#leagueStats').innerHTML = '<div class="loading">🔄 Cargando estadísticas de la liga...</div>'
+    $('#topPlayers').innerHTML = '<div class="loading">🔄 Cargando jugadores...</div>'
+    
+    const response = await authFetch('/api/admin/bot-dashboard')
+    const data = await response.json()
+    
+    if (data.success) {
+      renderBotStats(data.data.botUsage)
+      renderTopUsers(data.data.botUsage.topUsers)
+      renderLeagueStats(data.data.leagueData)
+      renderTopPlayers(data.data.leagueData.topPlayers)
+    } else {
+      throw new Error(data.error || 'Error al cargar dashboard')
+    }
+  } catch (error) {
+    console.error('Error loading bot dashboard:', error)
+    $('#botStats').innerHTML = `<div class="status-error">❌ Error: ${error.message}</div>`
+    $('#topUsers').innerHTML = `<div class="status-error">❌ Error: ${error.message}</div>`
+    $('#leagueStats').innerHTML = `<div class="status-error">❌ Error: ${error.message}</div>`
+    $('#topPlayers').innerHTML = `<div class="status-error">❌ Error: ${error.message}</div>`
+  }
+}
+
+function renderBotStats(stats) {
+  const statsHtml = `
+    <div class="stat-card">
+      <div class="stat-number">${stats.totalUsers}</div>
+      <div class="stat-label">Total Usuarios</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${stats.activeUsers}</div>
+      <div class="stat-label">Usuarios Activos (7 días)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${stats.totalConversations}</div>
+      <div class="stat-label">Conversaciones Totales</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${stats.totalMessages}</div>
+      <div class="stat-label">Mensajes Totales</div>
+    </div>
+  `
+  $('#botStats').innerHTML = statsHtml
+}
+
+function renderTopUsers(users) {
+  if (users.length === 0) {
+    $('#topUsers').innerHTML = '<p style="text-align: center; color: #6b7280;">No hay usuarios registrados</p>'
+    return
+  }
+  
+  const usersHtml = users.map((user, index) => `
+    <div class="top-user-item">
+      <div class="user-name">${index + 1}. ${user.playerId}</div>
+      <div class="user-stats">
+        ${user.conversationCount} conversaciones | 
+        Última vez: ${formatDate(user.lastSeen)}
+      </div>
+    </div>
+  `).join('')
+  
+  $('#topUsers').innerHTML = usersHtml
+}
+
+function renderLeagueStats(stats) {
+  const statsHtml = `
+    <div class="stat-card">
+      <div class="stat-number">${stats.totalPlayers}</div>
+      <div class="stat-label">Jugadores Registrados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${stats.totalMatches}</div>
+      <div class="stat-label">Partidos Totales</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${stats.monthlyMatches}</div>
+      <div class="stat-label">Partidos Este Mes</div>
+    </div>
+  `
+  $('#leagueStats').innerHTML = statsHtml
+}
+
+function renderTopPlayers(players) {
+  if (players.length === 0) {
+    $('#topPlayers').innerHTML = '<p style="text-align: center; color: #6b7280;">No hay datos de partidos</p>'
+    return
+  }
+  
+  const playersHtml = players.map((player, index) => `
+    <div class="top-player-item">
+      <div class="player-name">${index + 1}. ${player.name}</div>
+      <div class="player-stats">${player.victories} victorias</div>
+    </div>
+  `).join('')
+  
+  $('#topPlayers').innerHTML = playersHtml
+}
+
+// Add refresh button event listener
+document.addEventListener('DOMContentLoaded', () => {
+  $('#refreshDashboardBtn')?.addEventListener('click', () => {
+    loadBotDashboard()
   })
 })
 

@@ -277,6 +277,65 @@
     display: block;
     margin-top: 5px;
   }
+  
+  /* Dashboard Bot Styles */
+  .stat-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+  
+  .stat-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1e40af;
+    margin-bottom: 5px;
+  }
+  
+  .stat-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .top-user-item, .top-player-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: #fafafa;
+  }
+  
+  .top-user-item:hover, .top-player-item:hover {
+    background: #f3f4f6;
+  }
+  
+  .user-name, .player-name {
+    font-weight: 500;
+    color: #374151;
+  }
+  
+  .user-stats, .player-stats {
+    color: #6b7280;
+    font-size: 0.85rem;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+  }
   </style>
 </head>
 <body>
@@ -294,6 +353,7 @@
     <nav class="admin-nav">
       <button class="nav-btn active" data-section="players">👥 Jugadores</button>
       <button class="nav-btn" data-section="matches">🎾 Partidos</button>
+      <button class="nav-btn" data-section="bot-dashboard">🤖 Dashboard Bot</button>
       <button class="nav-btn" data-section="tools">🔧 Herramientas</button>
     </nav>
     
@@ -368,6 +428,48 @@
       
       <div class="card">
         <div id="matchesList"></div>
+      </div>
+    </div>
+    
+    <!-- SECCIÓN DASHBOARD DEL BOT -->
+    <div id="bot-dashboard-section" class="admin-section">
+      <div class="section-header">
+        <h2>🤖 Dashboard de Administración del Bot</h2>
+        <div class="filters">
+          <button class="btn-primary" id="refreshDashboardBtn">🔄 Actualizar</button>
+        </div>
+      </div>
+      
+      <!-- Estadísticas del Bot -->
+      <div class="card">
+        <h3>📊 Estadísticas de Uso del Bot</h3>
+        <div id="botStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </div>
+      
+      <!-- Top Usuarios -->
+      <div class="card">
+        <h3>👑 Top Usuarios Más Activos</h3>
+        <div id="topUsers">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </div>
+      
+      <!-- Estadísticas de la Liga -->
+      <div class="card">
+        <h3>🏆 Estadísticas de la Liga</h3>
+        <div id="leagueStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </div>
+      
+      <!-- Top Jugadores -->
+      <div class="card">
+        <h3>🥇 Top Jugadores por Victorias</h3>
+        <div id="topPlayers">
+          <!-- Se llena dinámicamente -->
+        </div>
       </div>
     </div>
     
