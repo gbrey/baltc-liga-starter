@@ -229,6 +229,74 @@ REGLAS DEL JUEGO BALTC:
 - Cada jugador debe jugar contra todos los demás al menos una vez
 - Los partidos se registran con marcador completo
 
+REGLAMENTO COMPLETO DE LA "LIGA CUBANITOS PLUS" (CATEGORÍA C):
+
+1. OBJETIVO DE LA LIGA:
+- Armar partidos singles entre diferentes jugadores, competir y divertirse
+- Saber quién es peor que quién para poder molestar
+- Crear un ranking de jugadores del BALTC
+
+2. MODALIDAD Y FORMATO:
+- Modalidad: Singles, todos contra todos, organizados por categoría C
+- Formato: Partidos al mejor de 3 sets; el tercer set se decide mediante Súper Tiebreak
+- Duración ideal: 6 meses
+- Se recomienda jugar 2-3 partidos mensuales
+
+3. ARMADO DE CATEGORÍAS:
+- Se consultó a referentes como Lugones, Lupis, Hiriart, Nogueira, Rozas, Bruzzesi
+- Se tomaron criterios como edad, físico, enfrentamientos
+- Al finalizar sabremos los ascensos y descensos para emparejar todo
+
+4. PUNTOS Y TABLAS:
+- Tabla ordenada por partidos Ganados-Perdidos
+- Criterios de desempate:
+  1. Resultado del enfrentamiento directo
+  2. Diferencia de sets
+  3. Menor cantidad de sets jugados
+  4. Diferencia de games
+  5. Decisión por sorteo
+
+5. CAMPEÓN Y ASCENSOS:
+- Al finalizar: semifinales (1° vs 4°, 2° vs 3°)
+- Los ganadores juegan la final
+- El vencedor es "Campeón Cubanito" de la categoría C
+- Los dos finalistas ascienden automáticamente a categoría B
+
+6. LESIONES Y AUSENCIAS:
+- Se permite irregularidad por viajes, trabajo y lesiones
+- En caso de abandono, el Comité decide cómo computar partidos pendientes
+- No necesariamente como "walk-over"
+
+7. COSTO:
+- No hay costo de inscripción
+- Cada jugador se encarga de conseguir cancha y pelotas
+- Cena final de premiación (se cotiza y se paga al bar)
+
+8. REGISTRO DE PARTIDOS:
+- Plataforma desarrollada para este tipo de torneos
+- En caso de no estar lista, Google Sheets casero
+- Comité confía en Lucas Llach o Gustavo Brey para resolver
+
+9. COMPROMISO:
+- Se juega o se juega, sin excusas
+- En caso de abandono sin justificación: maltrato social
+- Conflictos resueltos por el Comité (voz final: Dr. Diego Lugones)
+
+10. FECHAS:
+- Inicio: semana del 8 de marzo
+- Cierre etapa inicial: domingo 7 de septiembre
+- Semifinales: fin de semana del 14 de septiembre
+- Finales y promoción: fin de semana del 21 de septiembre
+
+11. OTROS TORNEOS:
+- Copa Bacigalupo: torneos de dobles de uno o dos días
+- Masters Cubanito: se evaluará organización
+- Otros torneos de fin de semana
+
+12. MODIFICACIONES:
+- Se aceptan sugerencias para mejorar
+- Puede modificarse para mantener espíritu competitivo y entretenido
+
 IMPORTANTE: 
 - Hay UNA SOLA LIGA BALTC (categoría C)
 - SOLO responde preguntas sobre los datos reales de la base de datos
