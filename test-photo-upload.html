@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Photo Upload - BALTC Liga</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test de Upload de Fotos - BALTC Liga</h1>
+        
+        <div class="form-group">
+            <label for="playerId">ID del Jugador:</label>
+            <input type="number" id="playerId" placeholder="Ingresa el ID del jugador" value="1">
+        </div>
+        
+        <div class="form-group">
+            <label for="photoFile">Seleccionar Imagen:</label>
+            <input type="file" id="photoFile" accept="image/*">
+            <small>Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
+        </div>
+        
+        <div id="previewContainer" style="display: none;">
+            <label>Vista previa:</label>
+            <img id="preview" class="preview" alt="Vista previa">
+        </div>
+        
+        <button onclick="testUpload()">📸 Probar Upload</button>
+        <button onclick="testAuth()">🔐 Probar Autenticación</button>
+        <button onclick="testEndpoint()">🌐 Probar Endpoint</button>
+        
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        
+        // Preview de imagen
+        $('photoFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('preview').src = e.target.result;
+                    $('previewContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                $('previewContainer').style.display = 'none';
+            }
+        });
+        
+        function showMessage(message, type = 'info') {
+            const messagesDiv = $('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        async function testAuth() {
+            showMessage('Probando autenticación...', 'info');
+            
+            try {
+                const response = await fetch('/api/admin/players', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('admin:admin')
+                    }
+                });
+                
+                if (response.ok) {
+                    showMessage('✅ Autenticación exitosa', 'success');
+                } else {
+                    showMessage(`❌ Error de autenticación: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testEndpoint() {
+            showMessage('Probando endpoint de upload...', 'info');
+            
+            try {
+                const response = await fetch('/api/admin/players/1/photo', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('admin:admin')
+                    }
+                });
+                
+                showMessage(`📡 Endpoint responde: ${response.status} ${response.statusText}`, 'info');
+                
+                if (response.status === 400) {
+                    showMessage('✅ Endpoint funciona (esperado error 400 sin archivo)', 'success');
+                } else {
+                    showMessage(`⚠️ Respuesta inesperada: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testUpload() {
+            const playerId = $('playerId').value;
+            const fileInput = $('photoFile');
+            const file = fileInput.files[0];
+            
+            if (!playerId) {
+                showMessage('❌ Por favor ingresa un ID de jugador', 'error');
+                return;
+            }
+            
+            if (!file) {
+                showMessage('❌ Por favor selecciona una imagen', 'error');
+                return;
+            }
+            
+            // Validaciones
+            if (!file.type.startsWith('image/')) {
+                showMessage('❌ El archivo debe ser una imagen', 'error');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('❌ La imagen es demasiado grande (máximo 5MB)', 'error');
+                return;
+            }
+            
+            showMessage(`📤 Subiendo foto para jugador ID: ${playerId}...`, 'info');
+            showMessage(`📁 Archivo: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, 'info');
+            
+            try {
+                const formData = new FormData();
+                formData.append('photo', file);
+                
+                const response = await fetch(`/api/admin/players/${playerId}/photo`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('admin:admin')
+                    },
+                    body: formData
+                });
+                
+                const responseText = await response.text();
+                
+                if (response.ok) {
+                    showMessage('✅ Foto subida exitosamente!', 'success');
+                    showMessage(`📄 Respuesta: ${responseText}`, 'info');
+                } else {
+                    showMessage(`❌ Error al subir foto: ${response.status} ${response.statusText}`, 'error');
+                    showMessage(`📄 Detalles: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
+                console.error('Error completo:', error);
+            }
+        }
+        
+        // Test inicial
+        window.addEventListener('load', () => {
+            showMessage('🚀 Página de test cargada. Lista para probar upload de fotos.', 'info');
+        });
+    </script>
+</body>
+</html>

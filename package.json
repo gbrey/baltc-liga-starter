@@ -6,7 +6,11 @@
   "scripts": {
     "build": "echo 'static'",
     "dev": "npx wrangler pages dev --port 8787",
-    "deploy": "npx wrangler pages deploy ./public --project-name=baltc-liga-starter --compatibility-date=2025-01-20 --config=wrangler.prod.toml",
+    "deploy": "npm run deploy:prod",
+    "deploy:prod": "npm run pre-deploy && npx wrangler pages deploy ./public --project-name=baltc-liga-starter && npm run post-deploy",
+    "pre-deploy": "npm run validate:prod",
+    "post-deploy": "npm run test:prod",
+    "validate:prod": "node scripts/validate-deploy.js",
     "test:local": "node scripts/test-apis.js local",
     "test:production": "node scripts/test-apis.js production",
     "test:curl:local": "./scripts/test-apis-curl.sh local",
@@ -21,7 +25,9 @@
     "test:bot": "node test-bot-regression.js",
     "test:bot:quick": "node test-quick.js",
     "test:bot:prod": "PRODUCTION_URL=https://baltc-liga.pages.dev node test-production.js",
-    "test:bot:all": "npm run test:bot:quick && npm run test:bot"
+    "test:bot:all": "npm run test:bot:quick && npm run test:bot",
+    "deploy:safe": "bash scripts/safe-deploy.sh",
+    "verify:prod": "node scripts/verify-production.js"
   },
   "devDependencies": {
     "bcryptjs": "^3.0.2",
