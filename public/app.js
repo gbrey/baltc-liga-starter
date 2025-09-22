@@ -589,7 +589,7 @@ function removeTypingIndicator() {
   }
 }
 
-function sendMessage() {
+async function sendMessage() {
   const input = document.getElementById('chatInput');
   const message = input.value.trim();
   
@@ -607,29 +607,47 @@ function sendMessage() {
   // Show typing indicator
   showTypingIndicator();
   
-  // Simulate bot response delay
-  setTimeout(() => {
-    removeTypingIndicator();
+  try {
+    // Call the backend bot API
+    const response = await fetch('/api/bot', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        player: 'web_user',
+        system: 'A'
+      })
+    });
     
-    // Check if we've reached the message limit
-    if (messageCount >= maxMessages) {
-      addMessage("Ya te dije 5 veces que necesito plata. ¿No entendés? Andá a laburar y después hablamos. Estoy terminando de armar el bot, en unos días estará listo.");
-      sendButton.disabled = false;
-      input.disabled = false;
-      return;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // Get random response
+    const data = await response.json();
+    
+    // Remove typing indicator
+    removeTypingIndicator();
+    
+    // Add bot response
+    addMessage(data.reply);
+    
+  } catch (error) {
+    console.error('Error calling bot API:', error);
+    
+    // Remove typing indicator
+    removeTypingIndicator();
+    
+    // Fallback to random response if API fails
     const randomResponse = garcabotResponses[Math.floor(Math.random() * garcabotResponses.length)];
     addMessage(randomResponse);
-    
-    messageCount++;
-    
-    // Re-enable input and button
-    sendButton.disabled = false;
-    input.disabled = false;
-    input.focus();
-  }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5 seconds
+  }
+  
+  // Re-enable input and button
+  sendButton.disabled = false;
+  input.disabled = false;
+  input.focus();
 }
 
 function handleSuggestionClick(event) {
