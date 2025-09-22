@@ -4,7 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo 'static'"
+    "build": "echo 'static'",
+    "dev": "npx wrangler pages dev --port 8787",
+    "deploy": "npx wrangler pages deploy ./public --project-name=baltc-liga-starter",
+    "test:local": "node scripts/test-apis.js local",
+    "test:production": "node scripts/test-apis.js production",
+    "test:curl:local": "./scripts/test-apis-curl.sh local",
+    "test:curl:production": "./scripts/test-apis-curl.sh production",
+    "test:all": "npm run test:local && npm run test:production",
+    "monitor": "bash scripts/monitor-deploy.sh",
+    "logs": "bash scripts/watch-logs.sh",
+    "deploy-and-test": "bash scripts/deploy-and-test.sh"
   },
   "devDependencies": {
     "bcryptjs": "^3.0.2",
