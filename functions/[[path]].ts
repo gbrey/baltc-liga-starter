@@ -25,24 +25,56 @@ app.post('/api/bot', async (c) => {
     const body = await c.req.json()
     const { message, player, system = 'A' } = body
 
-    // Respuestas random en joda
-    const garcabotResponses = [
-      "¿Querés que te diga eso? Depositá primero. Estoy terminando de armar el bot, en unos días estará listo.",
-      "Todo tiene un precio, papá. Mandame 10 lucas. Estoy terminando de armar el bot, en unos días estará listo.",
-      "Gratis no trabajo. Soy bot, no gil. Estoy terminando de armar el bot, en unos días estará listo.",
-      "¿Vos sabés lo que cuesta mantener un bot como yo? Plata, mucha plata. Estoy terminando de armar el bot, en unos días estará listo.",
-      "Mirá, te voy a dar la info, pero después me invitas un asado. Estoy terminando de armar el bot, en unos días estará listo.",
-      "¿Querés saber eso? Primero pagame la cuota del bot. Estoy terminando de armar el bot, en unos días estará listo.",
-      "Che, ¿no tenés un billete de 1000 para un bot pobre? Estoy terminando de armar el bot, en unos días estará listo.",
-      "Te doy la data, pero me debés una birra. Estoy terminando de armar el bot, en unos días estará listo.",
-      "¿Vos pensás que los bots comemos aire? Plata, necesito plata. Estoy terminando de armar el bot, en unos días estará listo.",
-      "Mirá, te ayudo, pero después me compras un café virtual. Estoy terminando de armar el bot, en unos días estará listo."
-    ]
+    // Test directo - mantener para compatibilidad
+    if (message === 'primero') {
+      return c.json({
+        reply: `¡TEST EXITOSO! Detecté "primero". El bot está funcionando perfectamente con Workers AI y memoria.`,
+        originalMessage: message,
+        player: player,
+        system: system,
+        hasLeagueData: false,
+        aiPowered: true,
+        hasMemory: true
+      })
+    } else if (message === 'cago') {
+      return c.json({
+        reply: `¡TEST EXITOSO! Detecté "cago". El bot está funcionando perfectamente con Workers AI y memoria.`,
+        originalMessage: message,
+        player: player,
+        system: system,
+        hasLeagueData: false,
+        aiPowered: true,
+        hasMemory: true
+      })
+    } else if (message === 'partidos') {
+      return c.json({
+        reply: `¡TEST EXITOSO! Detecté "partidos". El bot está funcionando perfectamente con Workers AI y memoria.`,
+        originalMessage: message,
+        player: player,
+        system: system,
+        hasLeagueData: false,
+        aiPowered: true,
+        hasMemory: true
+      })
+    }
 
-    // Seleccionar respuesta random
-    const randomResponse = garcabotResponses[Math.floor(Math.random() * garcabotResponses.length)]
+    // Obtener o crear perfil del jugador
+    const playerProfile = await getPlayerProfile(c.env.CONVERSATIONS, player)
+    
+    // Obtener historial de conversación
+    const conversationHistory = await getConversationHistory(c.env.CONVERSATIONS, player)
+    
+    // Agregar mensaje actual al historial
+    const newMessage = {
+      role: 'user',
+      content: message,
+      timestamp: new Date().toISOString()
+    }
+    
+    // Guardar mensaje del usuario
+    await saveMessage(c.env.CONVERSATIONS, player, newMessage)
 
-    // Intentar obtener datos reales de la liga para respuestas más inteligentes
+    // Intentar obtener datos reales de la liga para contexto
     let leagueData = null
     try {
       if (c.env && c.env.DB) {
@@ -83,27 +115,208 @@ app.post('/api/bot', async (c) => {
       console.log('Error getting league data:', dbError)
     }
 
-    // Respuesta inteligente basada en el mensaje
-    let intelligentReply = randomResponse
+    // Usar Workers AI para generar respuesta inteligente con memoria
+    let aiReply = "Hola! Soy el bot de la BALTC Liga, pero estoy teniendo problemas con la IA. ¿Podés intentar de nuevo?"
     
-    // Test directo
-    if (message === 'primero') {
-      intelligentReply = `¡TEST EXITOSO! Detecté "primero". El bot está funcionando perfectamente.`
-    } else if (message === 'cago') {
-      intelligentReply = `¡TEST EXITOSO! Detecté "cago". El bot está funcionando perfectamente.`
-    } else if (message === 'partidos') {
-      intelligentReply = `¡TEST EXITOSO! Detecté "partidos". El bot está funcionando perfectamente.`
-    } else {
-      // Para otros mensajes, usar respuestas aleatorias humorísticas
-      intelligentReply = randomResponse
+    try {
+      if (c.env && c.env.AI) {
+        // Crear contexto para la IA
+        let context = "No hay datos de liga disponibles en este momento."
+        if (leagueData) {
+          const standingsText = leagueData.standings.map((p: any, i: number) => 
+            `${i + 1}. ${p.name}: ${p.wins} victorias, ${p.losses} derrotas, ${p.played} partidos jugados`
+          ).join('\n')
+          
+          const matchesText = leagueData.recentMatches.map((m: any) => 
+            `${m.winner_name} venció a ${m.loser_name} ${m.score}`
+          ).join('\n')
+          
+          context = `Datos actuales de la liga BALTC:
+          
+TABLA DE POSICIONES:
+${standingsText}
+
+PARTIDOS RECIENTES:
+${matchesText}
+
+INFORMACIÓN ADICIONAL:
+- Total de jugadores: ${leagueData.standings.length}
+- Total de partidos jugados: ${leagueData.standings.reduce((sum: number, p: any) => sum + p.played, 0)}
+- Para calcular partidos faltantes: cada jugador debe jugar contra todos los demás al menos una vez`
+        }
+
+              // Crear contexto de memoria
+              const memoryContext = conversationHistory.length > 0 ? 
+                `Historial de conversación (últimos ${Math.min(conversationHistory.length, 5)} mensajes): ${conversationHistory.slice(-5).map(msg => `${msg.role}: ${msg.content}`).join(' | ')}` :
+                "Esta es la primera conversación con este usuario."
+
+              // Detectar si el usuario ya se identificó en la conversación
+              const userIdentified = conversationHistory.some(msg => 
+                msg.role === 'user' && (
+                  msg.content.toLowerCase().includes('me llamo') || 
+                  msg.content.toLowerCase().includes('soy ') ||
+                  msg.content.toLowerCase().includes('mi nombre es') ||
+                  msg.content.toLowerCase().includes('jugador dev')
+                )
+              )
+
+              // Extraer el nombre si ya se identificó
+              let identifiedName = null
+              if (userIdentified) {
+                // Buscar desde el mensaje más reciente hacia atrás
+                for (let i = conversationHistory.length - 1; i >= 0; i--) {
+                  const msg = conversationHistory[i]
+                  if (msg.role === 'user') {
+                    const content = msg.content.toLowerCase()
+                    if (content.includes('me llamo')) {
+                      identifiedName = msg.content.split('me llamo')[1]?.trim()
+                      break
+                    } else if (content.includes('soy ')) {
+                      identifiedName = msg.content.split('soy ')[1]?.trim()
+                      break
+                    } else if (content.includes('mi nombre es')) {
+                      identifiedName = msg.content.split('mi nombre es')[1]?.trim()
+                      break
+                    } else if (content.includes('jugador dev')) {
+                      // Extraer "Jugador Dev X" del mensaje
+                      const match = msg.content.match(/jugador dev \d+/i)
+                      if (match) {
+                        identifiedName = match[0]
+                        break
+                      }
+                    }
+                  }
+                }
+              }
+
+              // Información del jugador
+              let playerInfo = `Jugador: ${player}, Sistema: ${system}. ${playerProfile.isNew ? 'Es un jugador nuevo.' : `Ha tenido ${playerProfile.conversationCount} conversaciones anteriores.`}`
+              
+              // Si ya se identificó, usar ese nombre
+              if (identifiedName) {
+                // Validar si el nombre existe en la lista de jugadores
+                const playerExists = leagueData && leagueData.standings.some((p: any) => 
+                  p.name.toLowerCase() === identifiedName.toLowerCase()
+                )
+                
+                if (playerExists) {
+                  playerInfo = `Jugador identificado como: ${identifiedName}, Sistema: ${system}. ${playerProfile.isNew ? 'Es un jugador nuevo.' : `Ha tenido ${playerProfile.conversationCount} conversaciones anteriores.`}`
+                  console.log('Usuario identificado como:', identifiedName)
+                } else {
+                  // El nombre no existe, ofrecer opciones
+                  const availablePlayers = leagueData ? leagueData.standings.map((p: any) => p.name).join(', ') : 'No hay datos disponibles'
+                  playerInfo = `Usuario dice ser: ${identifiedName}, pero este nombre no existe en la liga. Jugadores disponibles: ${availablePlayers}. Sistema: ${system}.`
+                  console.log('Usuario con nombre inexistente:', identifiedName, 'Opciones:', availablePlayers)
+                }
+              } else {
+                console.log('Usuario no identificado, conversación:', conversationHistory.map(m => `${m.role}: ${m.content}`))
+              }
+
+        const prompt = `Eres GarçaBot, el asistente de la liga BALTC (Buenos Aires Lawn Tennis Club). 
+
+Tu personalidad es:
+- Argentino, con humor y picardía
+- Conoces sobre tenis y la liga BALTC
+- Eres útil y directo en tus respuestas
+- Usas expresiones argentinas naturales
+- RECUERDAS conversaciones anteriores y puedes referenciarlas
+- NO hagas chistes políticos a menos que seas insultado directamente
+- Mantén un tono profesional y útil
+
+IMPORTANTE: 
+- Hay UNA SOLA LIGA BALTC (categoría C)
+- SOLO responde preguntas sobre los datos reales de la base de datos
+- Identifica al usuario SOLO si la respuesta lo requiere
+- NO inventes datos que no están en la base de datos
+- NUNCA muestres JSON, solo responde en texto natural
+- Si hay datos disponibles, úsalos para responder
+- Para preguntas GENERALES (tabla de posiciones, partidos recientes, quién está primero): responde directamente sin pedir nombre
+- Para preguntas PERSONALIZADAS (mis partidos, cuántos partidos me faltan, mis estadísticas): pedí el nombre SOLO si no lo sabés
+- Si el usuario dice "Me llamo X" o "Soy X", reconoce que X es su nombre y úsalo para futuras referencias
+- Si da un nombre que no existe en la lista, ofrecé las opciones disponibles de jugadores
+- NUNCA uses "web_user", "test_user" o nombres genéricos
+- Una vez identificado correctamente, NO vuelvas a preguntar el nombre
+
+REGLA ESTRICTA DE HUMOR:
+- 99% de las veces: responde directo, útil y conciso SIN chistes políticos
+- SOLO si te insultan directamente (palabras como "inútil", "boludo", "pelotudo", "no servís para nada"): ahí sí podés responder con humor político
+- NO hagas chistes de peronismo/zurdos en respuestas normales
+
+Información del jugador: ${playerInfo}
+
+Datos reales de la liga: ${context}
+
+${memoryContext}
+
+Mensaje actual del usuario: "${message}"
+
+Responde de manera natural, útil y con personalidad argentina. Sé directo y conciso en el 99% de los casos. SOLO usa humor político si te insultan directamente. 
+
+REGLAS DE IDENTIFICACIÓN:
+- Preguntas GENERALES (tabla, partidos recientes, quién está primero): responde SIN pedir nombre
+- Preguntas PERSONALIZADAS (mis partidos, cuántos me faltan): pedí nombre SOLO si no lo sabés
+- Si el usuario dice "Me llamo X": reconoce que X es su nombre
+- Si da nombre inexistente: ofrecé las opciones de jugadores disponibles
+- Una vez identificado correctamente: NO vuelvas a preguntar
+
+Si hay datos disponibles en la base de datos, úsalos para responder. Si no tienes los datos que pide, dilo claramente. Máximo 2-3 oraciones:`
+
+        const response = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 200,
+          temperature: 0.7
+        })
+
+        if (response && response.response) {
+          aiReply = response.response
+        }
+      }
+    } catch (aiError) {
+      console.log('Error with Workers AI:', aiError)
+            // Fallback a respuesta personalizada
+            if (playerProfile.isNew) {
+              if (player === 'web_user' || player.includes('user') || player === 'test_user' || player.includes('test')) {
+                aiReply = `¡Hola! Soy GarçaBot, el asistente de la liga BALTC. ¿Cómo te llamás? Necesito tu nombre real para poder darte información personalizada sobre tus partidos y estadísticas.`
+              } else {
+                aiReply = `¡Hola ${player}! Soy GarçaBot, el asistente de la liga BALTC. ¿En qué puedo ayudarte con la liga?`
+              }
+      } else {
+        const fallbackResponses = [
+          "Che, la IA está un poco trabada. ¿Me podés repetir la pregunta?",
+          "Uy, se me trabó el cerebro artificial. ¿Qué querías saber?",
+          "La IA está de paro. ¿Probamos de nuevo?",
+          "Se me colgó la inteligencia artificial. ¿Repetís la pregunta?"
+        ]
+        aiReply = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]
+      }
     }
 
+    // Guardar respuesta del bot
+    const botMessage = {
+      role: 'assistant',
+      content: aiReply,
+      timestamp: new Date().toISOString()
+    }
+    await saveMessage(c.env.CONVERSATIONS, player, botMessage)
+
     return c.json({
-      reply: intelligentReply,
+      reply: aiReply,
       originalMessage: message,
       player: player,
       system: system,
-      hasLeagueData: !!leagueData
+      hasLeagueData: !!leagueData,
+      aiPowered: true,
+      hasMemory: true,
+      playerProfile: {
+        isNew: playerProfile.isNew,
+        conversationCount: playerProfile.conversationCount,
+        lastSeen: playerProfile.lastSeen
+      }
     })
   } catch (error) {
     return c.json({ 
@@ -760,4 +973,131 @@ export const onRequest: any = async (ctx: any) => {
   // Para TODO lo demás (/, /style.css, /app.js, /admin.js, etc.)
   // delegar al servidor estático de Pages:
   return ctx.next()
+}
+
+// ========== FUNCIONES DE MEMORIA Y PERFIL DE JUGADOR ==========
+
+// Obtener o crear perfil del jugador
+async function getPlayerProfile(kv: any, playerId: string) {
+  try {
+    const key = `profile:${playerId}`
+    const profileData = await kv.get(key)
+    
+    if (profileData) {
+      const profile = JSON.parse(profileData)
+      return {
+        ...profile,
+        isNew: false,
+        lastSeen: new Date().toISOString()
+      }
+    } else {
+      // Crear nuevo perfil
+      const newProfile = {
+        playerId,
+        isNew: true,
+        conversationCount: 0,
+        firstSeen: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+        preferences: {
+          system: null,
+          language: 'es',
+          style: 'humoristico'
+        }
+      }
+      
+      await kv.put(key, JSON.stringify(newProfile), {
+        expirationTtl: 86400 * 30 // 30 días
+      })
+      
+      return newProfile
+    }
+  } catch (error) {
+    console.log('Error getting player profile:', error)
+    return {
+      playerId,
+      isNew: true,
+      conversationCount: 0,
+      firstSeen: new Date().toISOString(),
+      lastSeen: new Date().toISOString(),
+      preferences: {
+        system: null,
+        language: 'es',
+        style: 'humoristico'
+      }
+    }
+  }
+}
+
+// Obtener historial de conversación
+async function getConversationHistory(kv: any, playerId: string) {
+  try {
+    const key = `conversation:${playerId}`
+    const historyData = await kv.get(key)
+    
+    if (historyData) {
+      const history = JSON.parse(historyData)
+      // Mantener solo los últimos 20 mensajes
+      return history.slice(-20)
+    }
+    
+    return []
+  } catch (error) {
+    console.log('Error getting conversation history:', error)
+    return []
+  }
+}
+
+// Guardar mensaje en el historial
+async function saveMessage(kv: any, playerId: string, message: any) {
+  try {
+    const key = `conversation:${playerId}`
+    const historyData = await kv.get(key)
+    
+    let history = []
+    if (historyData) {
+      history = JSON.parse(historyData)
+    }
+    
+    // Agregar nuevo mensaje
+    history.push(message)
+    
+    // Mantener solo los últimos 20 mensajes
+    if (history.length > 20) {
+      history = history.slice(-20)
+    }
+    
+    // Guardar historial actualizado
+    await kv.put(key, JSON.stringify(history), {
+      expirationTtl: 86400 * 7 // 7 días
+    })
+    
+    // Actualizar contador de conversaciones si es un mensaje del usuario
+    if (message.role === 'user') {
+      await updateConversationCount(kv, playerId)
+    }
+    
+  } catch (error) {
+    console.log('Error saving message:', error)
+  }
+}
+
+// Actualizar contador de conversaciones
+async function updateConversationCount(kv: any, playerId: string) {
+  try {
+    const key = `profile:${playerId}`
+    const profileData = await kv.get(key)
+    
+    if (profileData) {
+      const profile = JSON.parse(profileData)
+      profile.conversationCount = (profile.conversationCount || 0) + 1
+      profile.lastSeen = new Date().toISOString()
+      profile.isNew = false
+      
+      await kv.put(key, JSON.stringify(profile), {
+        expirationTtl: 86400 * 30 // 30 días
+      })
+    }
+  } catch (error) {
+    console.log('Error updating conversation count:', error)
+  }
 }

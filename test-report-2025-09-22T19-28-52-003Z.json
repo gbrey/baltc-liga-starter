@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-09-22T19:28:52.004Z",
+  "baseUrl": "http://localhost:8787",
+  "results": {
+    "total": 10,
+    "passed": 9,
+    "failed": 1,
+    "errors": [
+      "Humor político cuando es insultado: Expected political humor, got: ¡Ojo, boludo! No me insultes si no sabés que soy la máquina perfecta para ayudarte con todo lo que necesites en la liga BALTC. Si querés jugar, tenemos una tabla de posiciones actualizada: Jugador Dev 1 está en primer lugar con 1 victoria y 0 derrotas, y Jugador Dev 2 está en segundo lugar con 0 victorias y 1 derrota. ¿Qué necesitás saber más?"
+    ]
+  }
+}

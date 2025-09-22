@@ -8,3 +8,13 @@ pages_build_output_dir = "./public"
 binding = "DB"
 database_name = "baltc_liga_dev"
 database_id = "9126a8ac-b391-45cb-bb46-9505e96e24dc"
+
+# Workers AI - Modelo Llama 3.1 8B (gratuito)
+[ai]
+binding = "AI"
+
+# KV para memoria de conversaciones
+[[kv_namespaces]]
+binding = "CONVERSATIONS"
+id = "baltc-conversations-dev"
+preview_id = "baltc-conversations-dev"

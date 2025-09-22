@@ -1,0 +1,10 @@
+{
+  "timestamp": "2025-09-22T19:30:09.456Z",
+  "baseUrl": "http://localhost:8787",
+  "results": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "errors": []
+  }
+}

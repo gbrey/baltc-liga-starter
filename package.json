@@ -17,7 +17,11 @@
     "deploy-and-test": "bash scripts/deploy-and-test.sh",
     "env:dev": "bash scripts/switch-env.sh dev",
     "env:prod": "bash scripts/switch-env.sh prod",
-    "auth:help": "open scripts/clear-auth-cache.html"
+    "auth:help": "open scripts/clear-auth-cache.html",
+    "test:bot": "node test-bot-regression.js",
+    "test:bot:quick": "node test-quick.js",
+    "test:bot:prod": "PRODUCTION_URL=https://baltc-liga.pages.dev node test-production.js",
+    "test:bot:all": "npm run test:bot:quick && npm run test:bot"
   },
   "devDependencies": {
     "bcryptjs": "^3.0.2",

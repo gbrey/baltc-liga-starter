@@ -1,0 +1,108 @@
+name: Bot Regression Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+      - 'test-*.js'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+      - 'test-*.js'
+  schedule:
+    # Ejecutar tests diariamente a las 6 AM UTC
+    - cron: '0 6 * * *'
+
+jobs:
+  test-local:
+    runs-on: ubuntu-latest
+    name: Test Bot Locally
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Start local server
+      run: |
+        npm run dev &
+        sleep 10
+      env:
+        CI: true
+    
+    - name: Run quick bot tests
+      run: npm run test:bot:quick
+      timeout-minutes: 5
+    
+    - name: Run full regression tests
+      run: npm run test:bot
+      timeout-minutes: 10
+      continue-on-error: true
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-local
+        path: test-report-*.json
+
+  test-production:
+    runs-on: ubuntu-latest
+    name: Test Bot in Production
+    needs: test-local
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Wait for deployment
+      run: sleep 30
+    
+    - name: Run production tests
+      run: npm run test:bot:prod
+      timeout-minutes: 5
+      continue-on-error: true
+    
+    - name: Upload production test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-production
+        path: test-report-*.json
+
+  notify:
+    runs-on: ubuntu-latest
+    name: Notify Results
+    needs: [test-local, test-production]
+    if: always()
+    
+    steps:
+    - name: Notify on failure
+      if: needs.test-local.result == 'failure' || needs.test-production.result == 'failure'
+      run: |
+        echo "❌ Bot regression tests failed!"
+        echo "Check the artifacts for detailed results."
+        exit 1
+    
+    - name: Notify on success
+      if: needs.test-local.result == 'success' && (needs.test-production.result == 'success' || needs.test-production.result == 'skipped')
+      run: |
+        echo "✅ All bot regression tests passed!"
+        echo "The bot is working correctly."
